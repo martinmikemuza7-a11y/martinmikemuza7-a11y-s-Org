@@ -1,0 +1,45 @@
+=======================================================
+STUDYBUDDY AI - INSTALLATION & DEPLOYMENT GUIDE (v1.0.0)
+=======================================================
+
+StudyBuddy AI is a production-grade Progressive Web App (PWA) with full offline-first
+local storage, course-isolated RAG, and scheduled active recall.
+
+-------------------------------------------------------
+1. INSTANT INSTALLATION ON ANDROID (Native WebAPK)
+-------------------------------------------------------
+You do NOT need to download a suspicious or unverified .apk file:
+- Open your StudyBuddy AI live URL in Google Chrome, Edge, or Samsung Internet on your Android phone.
+- Tap the three dots (⋮) in the top-right corner.
+- Tap "Install app" (or "Add to Home screen").
+- Android's native package manager automatically mints and installs a WebAPK directly onto your device.
+- It appears in your App Drawer and Home Screen with the real StudyBuddy AI icon, splash screen, and full standalone offline capabilities!
+
+-------------------------------------------------------
+2. INSTANT INSTALLATION ON WINDOWS PC (Desktop App)
+-------------------------------------------------------
+- Open your StudyBuddy AI live URL in Microsoft Edge or Google Chrome on your PC.
+- In the address bar, click the "Install" icon (a computer with an arrow or + icon).
+- Or click the three dots (⋮) -> "Apps" -> "Install StudyBuddy AI".
+- Click "Install".
+- Windows automatically places desktop and Start Menu shortcuts. The app launches in its own dedicated, clean window without browser tabs or toolbars.
+
+-------------------------------------------------------
+3. 1-CLICK STANDALONE APK & WINDOWS INSTALLER BUILDER
+-------------------------------------------------------
+If you need a signed standalone APK (e.g. for Google Play Store) or a Windows MSIX/EXE:
+- Go to PWABuilder (https://www.pwabuilder.com) - a free tool built by Microsoft & Google.
+- Paste your StudyBuddy AI live URL.
+- Click "Package for Stores".
+- PWABuilder will automatically compile and download:
+  * Android APK / AAB package (signed and ready for Android installation or Play Store).
+  * Windows MSIX / EXE package (signed and ready for Windows 10 & 11 or Microsoft Store).
+
+-------------------------------------------------------
+4. LOCAL COMPILATION (CAPACITOR & ELECTRON)
+-------------------------------------------------------
+If you exported the source code via AI Studio Settings:
+- Install dependencies: npm install
+- Build web distribution: npm run build
+- For Android (Capacitor): npm run build:android (then ./gradlew assembleRelease in android/)
+- For Windows (Electron): npm run build:windows (then npx electron-builder --win nsis)

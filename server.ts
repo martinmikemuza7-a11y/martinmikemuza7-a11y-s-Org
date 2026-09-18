@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 
@@ -387,6 +388,33 @@ Respond ONLY with valid JSON in this schema:
     } catch (err: any) {
       res.status(500).json({ error: "Sync failed" });
     }
+  });
+
+  // Explicit download / releases handler with accurate headers and MIME types
+  app.get(["/releases/:filename", "/api/download/:filename"], (req, res) => {
+    const filename = path.basename(req.params.filename);
+    const filePath = path.join(process.cwd(), "public", "releases", filename);
+
+    if (fs.existsSync(filePath)) {
+      if (filename.endsWith(".apk")) {
+        res.setHeader("Content-Type", "application/vnd.android.package-archive");
+      } else if (filename.endsWith(".exe")) {
+        res.setHeader("Content-Type", "application/x-msdownload");
+      } else if (filename.endsWith(".zip")) {
+        res.setHeader("Content-Type", "application/zip");
+      } else if (filename.endsWith(".txt") || filename.endsWith(".md")) {
+        res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      } else {
+        res.setHeader("Content-Type", "application/octet-stream");
+      }
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      return res.sendFile(filePath);
+    }
+
+    return res.status(404).json({
+      error: "Release package not found",
+      message: "Please use the in-app PWA install or PWABuilder package generator.",
+    });
   });
 
   // Vite middleware in development vs static file serving in production

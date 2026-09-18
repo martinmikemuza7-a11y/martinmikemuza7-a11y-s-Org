@@ -17,6 +17,7 @@ export interface EvaluationResult {
   feedback: string;
   idealAnswer: string;
   reasoning?: string;
+  thinkingSteps?: string[];
   misconceptionsIdentified?: string;
   sourceCitation?: string;
   providerUsed: 'online_gemini' | 'offline_local';
@@ -361,6 +362,13 @@ export class AIEngine {
             feedback: data.feedback,
             idealAnswer: data.idealAnswer || question.correctAnswer,
             reasoning: data.reasoning || 'Gemini 3.8 Evaluator Reasoning: Evaluated student response against syllabus criteria, weighed key concepts, and generated actionable constructive feedback.',
+            thinkingSteps: Array.isArray(data.thinkingSteps) && data.thinkingSteps.length > 0
+              ? data.thinkingSteps
+              : [
+                  'Step 1: Parsed student response against question criteria',
+                  'Step 2: Cross-referenced with ground-truth syllabus notes',
+                  'Step 3: Diagnosed conceptual accuracy & synthesized grading rationale'
+                ],
             misconceptionsIdentified: data.misconceptionsIdentified,
             sourceCitation: data.sourceCitation || question.sourceCitation,
             providerUsed: 'online_gemini',

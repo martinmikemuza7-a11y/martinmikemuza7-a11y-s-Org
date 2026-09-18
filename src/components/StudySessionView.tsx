@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Course, Question, StudySession, Attempt, DocumentChunk } from '../types';
 import { AIEngine, EvaluationResult } from '../lib/ai-engine';
 import { putItem } from '../lib/db';
@@ -21,9 +22,11 @@ import {
   ChevronDown,
   HelpCircle,
   Type,
+  Brain,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { FormattedText, TextClaritySize } from './FormattedText';
+import { GeminiThinkingBadge } from './GeminiThinkingBadge';
 
 interface StudySessionViewProps {
   courses: Course[];
@@ -246,51 +249,60 @@ export const StudySessionView: React.FC<StudySessionViewProps> = ({
   if (!sessionActive && !sessionFinished) {
     return (
       <div className="mx-auto max-w-3xl space-y-6 pb-20 md:pb-8">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Timed Study Mode
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Dedicated distraction-free practice. Questions test comprehension with instant ground-truth citations.
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="inline-flex items-center gap-1.5 rounded-full border-2 border-slate-900 bg-amber-300 px-3 py-0.5 text-xs font-black uppercase tracking-wider text-slate-950 shadow-2d-sm mb-2">
+              <Clock className="h-3.5 w-3.5" />
+              <span>Active Drill</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950 dark:text-white">
+              Timed Study Mode
+            </h1>
+            <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mt-0.5">
+              Practice questions with instant citations and Gemini AI reasoning.
+            </p>
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="card-2d rounded-2xl border-2 border-slate-900 bg-white p-6 shadow-2d dark:border-slate-700 dark:bg-slate-900">
           <div className="space-y-6">
             {/* Choose Course */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
-                1. Select Course
+              <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                1. Select Course Knowledge Base
               </label>
-              <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {courses.map((c) => {
                   const qCount = questions.filter((q) => q.courseId === c.id).length;
                   const isSelected = c.id === selectedCourseId;
                   return (
-                    <button
+                    <motion.button
                       key={c.id}
+                      type="button"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedCourseId(c.id)}
-                      className={`flex items-start gap-3 rounded-xl border p-4 text-left transition ${
+                      className={`flex items-start gap-3 rounded-xl border-2 p-4 text-left transition cursor-pointer ${
                         isSelected
-                          ? 'border-blue-600 bg-blue-50/50 dark:border-blue-500 dark:bg-blue-950/30 ring-1 ring-blue-500'
-                          : 'border-slate-200 hover:border-slate-300 dark:border-slate-800'
+                          ? 'border-slate-900 bg-sky-200 text-slate-950 shadow-2d-sm dark:bg-sky-950/60 dark:text-white dark:border-sky-400'
+                          : 'border-slate-300 bg-slate-50 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-800/60 dark:hover:bg-slate-800'
                       }`}
                     >
                       <div
-                        className="h-8 w-8 shrink-0 rounded-lg flex items-center justify-center font-bold text-white text-xs"
+                        className="h-10 w-10 shrink-0 rounded-xl border-2 border-slate-900 flex items-center justify-center font-black text-white text-sm shadow-2d-sm"
                         style={{ backgroundColor: c.color || '#2563eb' }}
                       >
                         {c.name.charAt(0)}
                       </div>
                       <div>
-                        <h4 className="font-semibold text-xs text-slate-900 dark:text-white">
+                        <h4 className="font-black text-sm text-slate-950 dark:text-white">
                           {c.name}
                         </h4>
-                        <span className="text-[11px] text-slate-500">
+                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
                           {qCount} Questions in bank
                         </span>
                       </div>
-                    </button>
+                    </motion.button>
                   );
                 })}
               </div>
@@ -298,39 +310,45 @@ export const StudySessionView: React.FC<StudySessionViewProps> = ({
 
             {/* Choose Duration */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 2. Target Session Duration
               </label>
-              <div className="mt-2 grid grid-cols-4 gap-3">
+              <div className="mt-3 grid grid-cols-4 gap-3">
                 {[15, 30, 45, 60].map((dur) => (
-                  <button
+                  <motion.button
                     key={dur}
+                    type="button"
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setDurationMinutes(dur)}
-                    className={`rounded-xl border py-3 text-center transition ${
+                    className={`rounded-xl border-2 py-3 text-center transition cursor-pointer ${
                       durationMinutes === dur
-                        ? 'border-blue-600 bg-blue-600 text-white font-bold'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200'
+                        ? 'border-slate-900 bg-amber-300 text-slate-950 font-black shadow-2d-sm dark:border-amber-400'
+                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 font-bold'
                     }`}
                   >
-                    <span className="text-sm font-semibold">{dur}</span>
-                    <span className="block text-[10px] opacity-80">mins</span>
-                  </button>
+                    <span className="text-sm sm:text-base font-black">{dur}</span>
+                    <span className="block text-[10px] font-bold uppercase opacity-80">mins</span>
+                  </motion.button>
                 ))}
               </div>
             </div>
 
             {/* Launch Button */}
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <span className="text-xs text-slate-500">
-                Session size: ~{Math.max(3, Math.round(durationMinutes / 3))} questions
+            <div className="pt-5 border-t-2 border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                Session scope: <strong>~{Math.max(3, Math.round(durationMinutes / 3))}</strong> interactive questions
               </span>
-              <button
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={handleStartSession}
-                className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition hover:bg-blue-700 active:scale-95"
+                className="btn-2d flex items-center gap-2 rounded-xl border-2 border-slate-900 bg-amber-400 px-6 py-3 text-sm font-black text-slate-950 shadow-2d transition hover:bg-amber-300 cursor-pointer"
               >
                 <Play className="h-4 w-4 fill-current" />
                 <span>Begin Timed Session</span>
-              </button>
+              </motion.button>
             </div>
           </div>
         </div>
@@ -345,54 +363,66 @@ export const StudySessionView: React.FC<StudySessionViewProps> = ({
     return (
       <div className="mx-auto max-w-3xl space-y-6 pb-20 md:pb-8">
         {/* Top Floating Session Header: Timer & Progress */}
-        <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="card-2d flex items-center justify-between rounded-2xl border-2 border-slate-900 bg-white p-4 shadow-2d-sm dark:border-slate-700 dark:bg-slate-900">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 font-mono text-sm font-bold text-blue-600 dark:text-blue-400">
+            <div className="flex items-center gap-1.5 rounded-full border-2 border-slate-900 bg-amber-300 px-3 py-1 font-mono text-xs sm:text-sm font-black text-slate-950 shadow-2d-sm">
               <Clock className="h-4 w-4" />
               <span>{formatTimer(secondsRemaining)}</span>
             </div>
-            <span className="text-slate-300 dark:text-slate-700">|</span>
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+            <span className="font-bold text-slate-400 dark:text-slate-600">/</span>
+            <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-200">
               Question {currentIndex + 1} of {sessionQuestions.length}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setIsPaused(!isPaused)}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300"
+              className="btn-2d rounded-xl border-2 border-slate-900 bg-white px-3 py-1.5 text-xs font-black text-slate-900 shadow-2d-sm hover:bg-slate-100 dark:bg-slate-800 dark:text-white cursor-pointer"
             >
-              {isPaused ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}
-            </button>
-            <button
+              {isPaused ? (
+                <span className="flex items-center gap-1"><Play className="h-3.5 w-3.5 fill-current" /> Resume</span>
+              ) : (
+                <span className="flex items-center gap-1"><Pause className="h-3.5 w-3.5" /> Pause</span>
+              )}
+            </motion.button>
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={handleFinishSession}
-              className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+              className="btn-2d rounded-xl border-2 border-slate-900 bg-rose-200 px-3 py-1.5 text-xs font-black text-slate-950 shadow-2d-sm hover:bg-rose-300 cursor-pointer"
             >
               End Session
-            </button>
+            </motion.button>
           </div>
         </div>
 
         {/* Progress Bar */}
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-          <div
-            className="h-full bg-blue-600 transition-all duration-300"
-            style={{ width: `${((currentIndex + 1) / sessionQuestions.length) * 100}%` }}
+        <div className="h-3 w-full overflow-hidden rounded-full border-2 border-slate-900 bg-slate-100 shadow-2d-sm dark:border-slate-700 dark:bg-slate-800">
+          <motion.div
+            className="h-full bg-emerald-400"
+            initial={{ width: 0 }}
+            animate={{ width: `${((currentIndex + 1) / sessionQuestions.length) * 100}%` }}
+            transition={{ duration: 0.3 }}
           />
         </div>
 
         {/* Question Card */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-            <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
+        <div className="card-2d rounded-2xl border-2 border-slate-900 bg-white p-6 shadow-2d dark:border-slate-700 dark:bg-slate-900 sm:p-8">
+          <div className="flex items-center justify-between pb-3 border-b-2 border-slate-100 dark:border-slate-800">
+            <span className="rounded-full border-2 border-slate-900 bg-sky-200 px-3 py-0.5 text-[11px] font-black uppercase tracking-wider text-slate-950 shadow-2d-sm">
               {currentQ.type.replace('_', ' ')} • {currentQ.difficulty}
             </span>
-            <span className="text-xs text-slate-400">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
               {activeCourse.name}
             </span>
           </div>
 
-          <h2 className="mt-4 text-base font-semibold text-slate-900 dark:text-white sm:text-lg leading-relaxed">
+          <h2 className="mt-4 text-base sm:text-xl font-black text-slate-950 dark:text-white leading-snug">
             {currentQ.question}
           </h2>
 
@@ -400,25 +430,30 @@ export const StudySessionView: React.FC<StudySessionViewProps> = ({
           <div className="mt-6 space-y-3">
             {/* Multiple Choice Options */}
             {currentQ.type === 'multiple_choice' && currentQ.options && (
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 {currentQ.options.map((opt, i) => {
                   const isSelected = selectedOption === opt;
                   return (
-                    <button
+                    <motion.button
                       key={i}
+                      type="button"
                       disabled={isAnswered}
+                      whileHover={!isAnswered ? { x: 4, scale: 1.01 } : undefined}
+                      whileTap={!isAnswered ? { scale: 0.99 } : undefined}
                       onClick={() => setSelectedOption(opt)}
-                      className={`flex w-full items-start gap-3 rounded-xl border p-4 text-left text-xs sm:text-sm transition ${
+                      className={`flex w-full items-start gap-3 rounded-xl border-2 p-4 text-left text-xs sm:text-sm transition cursor-pointer ${
                         isSelected
-                          ? 'border-blue-600 bg-blue-50/70 text-blue-900 font-medium dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-200'
-                          : 'border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700'
+                          ? 'border-slate-900 bg-sky-200 text-slate-950 font-black shadow-2d-sm dark:bg-sky-950/60 dark:text-white dark:border-sky-400'
+                          : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800'
                       }`}
                     >
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold">
+                      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-slate-900 text-xs font-black shadow-2d-sm ${
+                        isSelected ? 'bg-amber-300 text-slate-950' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                      }`}>
                         {String.fromCharCode(65 + i)}
                       </span>
-                      <span>{opt}</span>
-                    </button>
+                      <span className="mt-0.5 leading-relaxed">{opt}</span>
+                    </motion.button>
                   );
                 })}
               </div>
@@ -428,18 +463,21 @@ export const StudySessionView: React.FC<StudySessionViewProps> = ({
             {currentQ.type === 'true_false' && (
               <div className="grid grid-cols-2 gap-4">
                 {['True', 'False'].map((tf) => (
-                  <button
+                  <motion.button
                     key={tf}
+                    type="button"
                     disabled={isAnswered}
+                    whileHover={!isAnswered ? { y: -2 } : undefined}
+                    whileTap={!isAnswered ? { scale: 0.96 } : undefined}
                     onClick={() => setSelectedOption(tf)}
-                    className={`rounded-xl border py-4 text-center text-sm font-semibold transition ${
+                    className={`rounded-xl border-2 py-4 text-center text-sm font-black transition cursor-pointer ${
                       selectedOption === tf
-                        ? 'border-blue-600 bg-blue-50/70 text-blue-900 dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-200'
-                        : 'border-slate-200 hover:border-slate-300 dark:border-slate-800'
+                        ? 'border-slate-900 bg-amber-300 text-slate-950 shadow-2d-sm dark:border-amber-400'
+                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200'
                     }`}
                   >
                     {tf}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             )}
@@ -452,8 +490,8 @@ export const StudySessionView: React.FC<StudySessionViewProps> = ({
                   disabled={isAnswered}
                   value={shortAnswerText}
                   onChange={(e) => setShortAnswerText(e.target.value)}
-                  placeholder="Formulate your explanation here. The AI will evaluate your conceptual accuracy against the course text..."
-                  className="w-full rounded-xl border border-slate-200 p-4 text-xs sm:text-sm text-slate-900 focus:border-blue-500 focus:outline-none dark:border-slate-800 dark:bg-slate-800 dark:text-white"
+                  placeholder="Explain clearly in your own words. Gemini AI will evaluate your concepts against the course material..."
+                  className="w-full rounded-xl border-2 border-slate-900 p-4 text-xs sm:text-sm text-slate-900 font-medium focus:border-amber-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white shadow-2d-sm"
                 />
               </div>
             )}
@@ -462,75 +500,87 @@ export const StudySessionView: React.FC<StudySessionViewProps> = ({
           {/* Submit Action */}
           {!isAnswered ? (
             <div className="mt-6 flex justify-end">
-              <button
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
                 disabled={
                   isEvaluating ||
                   (currentQ.type === 'short_answer' ? !shortAnswerText.trim() : !selectedOption)
                 }
                 onClick={handleSubmitAnswer}
-                className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
+                className="btn-2d flex items-center gap-2 rounded-xl border-2 border-slate-900 bg-emerald-400 px-6 py-3 text-xs sm:text-sm font-black text-slate-950 shadow-2d transition hover:bg-emerald-300 disabled:opacity-50 cursor-pointer"
               >
                 {isEvaluating ? (
                   <>
-                    <Sparkles className="h-3.5 w-3.5 animate-spin" />
-                    <span>Evaluating Answer...</span>
+                    <Sparkles className="h-4 w-4 animate-spin text-slate-950" />
+                    <span>Gemini is Reasoning & Evaluating...</span>
                   </>
                 ) : (
                   <span>Submit Answer</span>
                 )}
-              </button>
+              </motion.button>
             </div>
           ) : null}
 
           {/* Evaluation Results & Citation Drawer */}
           {currentEvaluation && (
-            <div className="mt-6 space-y-4 rounded-xl border border-slate-200 bg-slate-50/60 p-5 dark:border-slate-800 dark:bg-slate-800/40">
+            <div className="card-2d mt-6 space-y-4 rounded-xl border-2 border-slate-900 bg-amber-50/50 p-5 shadow-2d dark:border-slate-700 dark:bg-slate-800/60">
               {/* Badge & Score */}
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  {currentEvaluation.evaluation === 'Correct' ? (
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                  ) : currentEvaluation.evaluation === 'Partial' ? (
-                    <AlertCircle className="h-5 w-5 text-amber-500" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-red-500" />
-                  )}
                   <span
-                    className={`font-bold text-sm ${
+                    className={`inline-flex items-center gap-1.5 rounded-full border-2 border-slate-900 px-3 py-1 text-xs font-black shadow-2d-sm ${
                       currentEvaluation.evaluation === 'Correct'
-                        ? 'text-emerald-700 dark:text-emerald-400'
+                        ? 'bg-emerald-300 text-slate-950'
                         : currentEvaluation.evaluation === 'Partial'
-                        ? 'text-amber-700 dark:text-amber-400'
-                        : 'text-red-700 dark:text-red-400'
+                        ? 'bg-amber-300 text-slate-950'
+                        : 'bg-rose-300 text-slate-950'
                     }`}
                   >
-                    {currentEvaluation.evaluation} ({currentEvaluation.score}%)
+                    {currentEvaluation.evaluation === 'Correct' ? (
+                      <CheckCircle2 className="h-4 w-4" />
+                    ) : currentEvaluation.evaluation === 'Partial' ? (
+                      <AlertCircle className="h-4 w-4" />
+                    ) : (
+                      <XCircle className="h-4 w-4" />
+                    )}
+                    <span>{currentEvaluation.evaluation} ({currentEvaluation.score}%)</span>
                   </span>
                 </div>
 
-                <span className="text-[10px] text-slate-400">
-                  Evaluator: {currentEvaluation.providerUsed}
+                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                  Evaluator: {currentEvaluation.providerUsed === 'online_gemini' ? 'Gemini 3.8 Flash' : 'Offline Local'}
                 </span>
               </div>
 
+              {/* Gemini Thinking & Reasoning Badge */}
+              <GeminiThinkingBadge
+                reasoning={currentEvaluation.reasoning}
+                thinkingSteps={currentEvaluation.thinkingSteps}
+              />
+
               {/* Feedback Text */}
-              <p className="text-xs text-slate-700 dark:text-slate-300">
-                {currentEvaluation.feedback}
-              </p>
+              <div className="rounded-xl border-2 border-slate-900 bg-white p-3.5 text-xs sm:text-sm font-bold text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 shadow-2d-sm">
+                <span className="font-black text-slate-950 dark:text-white uppercase tracking-wider text-[11px] block mb-1">
+                  AI Feedback:
+                </span>
+                <p className="leading-relaxed">{currentEvaluation.feedback}</p>
+              </div>
 
               {/* Ideal / Correct Answer */}
-              <div className="rounded-lg bg-white p-3 text-xs dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-                <span className="font-semibold text-slate-800 dark:text-slate-200">
+              <div className="rounded-xl border-2 border-slate-900 bg-emerald-100 p-3.5 text-xs sm:text-sm dark:bg-emerald-950/40 border-emerald-900/60 shadow-2d-sm">
+                <span className="font-black uppercase text-[11px] tracking-wider text-emerald-950 dark:text-emerald-300 block mb-1">
                   Model Answer:
                 </span>
-                <p className="mt-1 text-slate-600 dark:text-slate-400">
+                <p className="font-bold text-emerald-950 dark:text-emerald-100 leading-relaxed">
                   {currentEvaluation.idealAnswer}
                 </p>
               </div>
 
               {/* Verified Source Citation */}
-              <div className="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-300">
-                <BookOpen className="h-3.5 w-3.5 shrink-0" />
+              <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900 dark:text-blue-300">
+                <BookOpen className="h-4 w-4 shrink-0 text-blue-600" />
                 <span>
                   <strong>Grounded in:</strong> {currentQ.sourceCitation}
                 </span>
@@ -538,13 +588,16 @@ export const StudySessionView: React.FC<StudySessionViewProps> = ({
 
               {/* Next Button */}
               <div className="mt-4 flex justify-end">
-                <button
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={handleNextQuestion}
-                  className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
+                  className="btn-2d flex items-center gap-2 rounded-xl border-2 border-slate-900 bg-amber-400 px-6 py-2.5 text-xs sm:text-sm font-black text-slate-950 shadow-2d hover:bg-amber-300 cursor-pointer"
                 >
                   <span>{currentIndex < sessionQuestions.length - 1 ? 'Next Question' : 'Finish Review'}</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </button>
+                  <ArrowRight className="h-4 w-4" />
+                </motion.button>
               </div>
             </div>
           )}
@@ -557,61 +610,65 @@ export const StudySessionView: React.FC<StudySessionViewProps> = ({
   if (sessionFinished && finishedSummary) {
     return (
       <div className="mx-auto max-w-2xl space-y-6 pb-20 md:pb-8">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xl text-center dark:border-slate-800 dark:bg-slate-900 sm:p-8">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
+        <div className="card-2d rounded-2xl border-2 border-slate-900 bg-white p-6 shadow-2d text-center dark:border-slate-700 dark:bg-slate-900 sm:p-8">
+          <motion.div
+            initial={{ scale: 0.8, rotate: -6 }}
+            animate={{ scale: 1, rotate: 0 }}
+            className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-slate-900 bg-amber-300 text-slate-950 shadow-2d"
+          >
             <Award className="h-8 w-8" />
-          </div>
+          </motion.div>
 
-          <h2 className="mt-4 text-2xl font-bold text-slate-900 dark:text-white">
+          <h2 className="mt-4 text-2xl sm:text-3xl font-black text-slate-950 dark:text-white">
             Study Session Completed!
           </h2>
-          <p className="mt-1 text-xs text-slate-500">
-            {activeCourse.name} • {Math.round(finishedSummary.elapsedSeconds / 60)} minutes spent
+          <p className="mt-1 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-400">
+            {activeCourse.name} • {Math.round(finishedSummary.elapsedSeconds / 60)} minutes completed
           </p>
 
           {/* Score Metric Ring / Number */}
-          <div className="mt-6 inline-block rounded-2xl bg-slate-50 px-8 py-6 dark:bg-slate-800/50">
-            <span className="text-4xl font-extrabold text-blue-600 dark:text-blue-400">
+          <div className="mt-6 inline-block rounded-2xl border-2 border-slate-900 bg-amber-200 px-8 py-5 shadow-2d-sm">
+            <span className="text-4xl sm:text-5xl font-black text-slate-950">
               {finishedSummary.score}%
             </span>
-            <span className="block text-xs font-medium text-slate-500 mt-1">
+            <span className="block text-xs font-black uppercase tracking-wider text-slate-900 mt-1">
               Overall Accuracy
             </span>
           </div>
 
           {/* Breakdown Pills */}
           <div className="mt-6 grid grid-cols-3 gap-3 text-center">
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 dark:border-emerald-900 dark:bg-emerald-950/20">
-              <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
+            <div className="rounded-xl border-2 border-slate-900 bg-emerald-200 p-3 shadow-2d-sm text-slate-950">
+              <span className="text-xl font-black">
                 {finishedSummary.correctCount}
               </span>
-              <span className="block text-[11px] text-slate-500">Correct</span>
+              <span className="block text-[11px] font-black uppercase tracking-wider">Correct</span>
             </div>
-            <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-900 dark:bg-amber-950/20">
-              <span className="text-lg font-bold text-amber-700 dark:text-amber-400">
+            <div className="rounded-xl border-2 border-slate-900 bg-amber-200 p-3 shadow-2d-sm text-slate-950">
+              <span className="text-xl font-black">
                 {finishedSummary.partialCount}
               </span>
-              <span className="block text-[11px] text-slate-500">Partial</span>
+              <span className="block text-[11px] font-black uppercase tracking-wider">Partial</span>
             </div>
-            <div className="rounded-xl border border-red-200 bg-red-50/50 p-3 dark:border-red-900 dark:bg-red-950/20">
-              <span className="text-lg font-bold text-red-700 dark:text-red-400">
+            <div className="rounded-xl border-2 border-slate-900 bg-rose-200 p-3 shadow-2d-sm text-slate-950">
+              <span className="text-xl font-black">
                 {finishedSummary.incorrectCount}
               </span>
-              <span className="block text-[11px] text-slate-500">Review Needed</span>
+              <span className="block text-[11px] font-black uppercase tracking-wider">Review Needed</span>
             </div>
           </div>
 
           {/* Weak Topics to Retain */}
           {finishedSummary.weakTopics.length > 0 && (
-            <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 text-left dark:border-slate-800 dark:bg-slate-800/40">
-              <h4 className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+            <div className="card-2d mt-6 rounded-xl border-2 border-slate-900 bg-amber-50 p-4 text-left shadow-2d-sm dark:border-slate-700 dark:bg-slate-800">
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
                 Priority Review Concepts
               </h4>
-              <div className="mt-2 flex flex-wrap gap-1.5">
+              <div className="mt-2.5 flex flex-wrap gap-2">
                 {finishedSummary.weakTopics.map((topic, i) => (
                   <span
                     key={i}
-                    className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-2xs dark:bg-slate-900 dark:text-slate-300"
+                    className="rounded-lg border-2 border-slate-900 bg-white px-3 py-1 text-xs font-black text-slate-950 shadow-2d-sm dark:bg-slate-900 dark:text-white"
                   >
                     {topic}
                   </span>
@@ -622,25 +679,25 @@ export const StudySessionView: React.FC<StudySessionViewProps> = ({
 
           {/* Question-by-Question Review with Clear Words */}
           {sessionQuestions.length > 0 && (
-            <div className="mt-6 rounded-2xl border-2 border-slate-200 bg-white p-5 text-left dark:border-slate-800 dark:bg-slate-900">
+            <div className="card-2d mt-6 rounded-2xl border-2 border-slate-900 bg-white p-5 text-left shadow-2d-sm dark:border-slate-700 dark:bg-slate-900">
               <button
                 type="button"
                 onClick={() => setShowQuestionReview(!showQuestionReview)}
-                className="flex w-full items-center justify-between font-bold text-sm text-slate-900 dark:text-white"
+                className="flex w-full items-center justify-between font-black text-sm text-slate-950 dark:text-white cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <HelpCircle className="h-4 w-4 text-blue-600" />
+                  <HelpCircle className="h-4 w-4 text-amber-500" />
                   <span>Review All Questions & Answers ({sessionQuestions.length})</span>
                 </div>
                 {showQuestionReview ? (
-                  <ChevronDown className="h-4 w-4 text-slate-500" />
+                  <ChevronDown className="h-4 w-4 text-slate-900 dark:text-white" />
                 ) : (
-                  <ChevronRight className="h-4 w-4 text-slate-500" />
+                  <ChevronRight className="h-4 w-4 text-slate-900 dark:text-white" />
                 )}
               </button>
 
               {showQuestionReview && (
-                <div className="mt-4 space-y-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <div className="mt-4 space-y-4 pt-3 border-t-2 border-slate-100 dark:border-slate-800">
                   {sessionQuestions.map((q, qIdx) => {
                     const evalResult = answersSubmitted.get(qIdx);
                     const studentAns = studentAnswers.get(qIdx) || 'No response recorded';
@@ -650,26 +707,26 @@ export const StudySessionView: React.FC<StudySessionViewProps> = ({
                     return (
                       <div
                         key={q.id || qIdx}
-                        className={`rounded-2xl p-4.5 border-2 transition-all ${
+                        className={`rounded-xl p-4 border-2 border-slate-900 shadow-2d-sm transition-all ${
                           isCorrect
-                            ? 'border-emerald-200 bg-emerald-50/40 dark:border-emerald-900/60 dark:bg-emerald-950/20'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/20'
                             : isPartial
-                            ? 'border-amber-200 bg-amber-50/40 dark:border-amber-900/60 dark:bg-amber-950/20'
-                            : 'border-red-200 bg-red-50/40 dark:border-red-900/60 dark:bg-red-950/20'
+                            ? 'bg-amber-50 dark:bg-amber-950/20'
+                            : 'bg-rose-50 dark:bg-rose-950/20'
                         }`}
                       >
                         {/* Question Title & Status */}
-                        <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-black/5 dark:border-white/5">
-                          <span className="text-xs font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                        <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b-2 border-slate-900/10 dark:border-white/10">
+                          <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
                             Question {qIdx + 1} • {q.type.replace('_', ' ')}
                           </span>
                           <span
-                            className={`flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                            className={`flex items-center gap-1 text-xs font-black px-2.5 py-0.5 rounded-full border-2 border-slate-900 shadow-2d-sm ${
                               isCorrect
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
+                                ? 'bg-emerald-300 text-slate-950'
                                 : isPartial
-                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                ? 'bg-amber-300 text-slate-950'
+                                : 'bg-rose-300 text-slate-950'
                             }`}
                           >
                             {isCorrect ? (
@@ -689,41 +746,41 @@ export const StudySessionView: React.FC<StudySessionViewProps> = ({
                         </div>
 
                         {/* Question Text */}
-                        <h4 className="mt-2.5 font-bold text-slate-950 dark:text-white text-base leading-snug">
+                        <h4 className="mt-2.5 font-black text-slate-950 dark:text-white text-base leading-snug">
                           {q.question}
                         </h4>
 
                         {/* Student's Answer */}
                         <div className="mt-3 text-xs sm:text-sm">
-                          <span className="font-extrabold uppercase text-[11px] tracking-wider text-slate-500 block">
+                          <span className="font-black uppercase text-[11px] tracking-wider text-slate-500 block">
                             Your Answer:
                           </span>
-                          <span className="font-semibold text-slate-900 dark:text-white mt-0.5 block">
+                          <span className="font-bold text-slate-900 dark:text-white mt-0.5 block">
                             {studentAns}
                           </span>
                         </div>
 
-                        {/* Correct / Model Answer in clear words */}
-                        <div className="mt-2.5 rounded-xl bg-emerald-100/70 dark:bg-emerald-950/60 p-3 text-xs sm:text-sm border border-emerald-300 dark:border-emerald-800">
-                          <span className="font-extrabold uppercase text-[11px] tracking-wider text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 mb-1">
-                            <CheckCircle2 className="h-3.5 w-3.5" /> Correct Answer:
+                        {/* Correct / Model Answer */}
+                        <div className="mt-2.5 rounded-xl bg-emerald-200 border-2 border-slate-900 p-3 text-xs sm:text-sm shadow-2d-sm">
+                          <span className="font-black uppercase text-[11px] tracking-wider text-slate-950 flex items-center gap-1.5 mb-1">
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Model Answer:
                           </span>
-                          <span className="font-bold text-slate-950 dark:text-white">
+                          <span className="font-bold text-slate-950">
                             {evalResult?.idealAnswer || q.correctAnswer}
                           </span>
                         </div>
 
                         {/* Explanation */}
                         {q.explanation && (
-                          <div className="mt-2.5 text-xs text-slate-700 dark:text-slate-300 bg-white/80 dark:bg-slate-800/80 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
-                            <span className="font-bold block text-slate-900 dark:text-white mb-1">Explanation:</span>
+                          <div className="mt-2.5 text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800 p-3 rounded-xl border-2 border-slate-900 shadow-2d-sm">
+                            <span className="font-black block text-slate-950 dark:text-white mb-1 uppercase text-[11px] tracking-wider">Explanation:</span>
                             <FormattedText content={q.explanation} size="standard" />
                           </div>
                         )}
 
                         {/* Source Citation */}
-                        <div className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
-                          <BookOpen className="h-3 w-3 text-blue-500 shrink-0" />
+                        <div className="mt-2 flex items-center gap-1.5 text-xs text-blue-900 dark:text-blue-300 font-bold">
+                          <BookOpen className="h-3.5 w-3.5 text-blue-600 shrink-0" />
                           <span>Grounded in: {q.sourceCitation}</span>
                         </div>
                       </div>
@@ -736,26 +793,35 @@ export const StudySessionView: React.FC<StudySessionViewProps> = ({
 
           {/* Post-Session Actions */}
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => onScheduleRecall(activeCourse.id, `Revision: ${activeCourse.name}`)}
-              className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-purple-700 transition"
+              className="btn-2d flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border-2 border-slate-900 bg-sky-300 px-5 py-2.5 text-xs sm:text-sm font-black text-slate-950 shadow-2d hover:bg-sky-200 cursor-pointer"
             >
               <Calendar className="h-4 w-4" />
-              <span>Add to Active Recall Schedule</span>
-            </button>
-            <button
+              <span>Add to Recall Schedule</span>
+            </motion.button>
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={handleStartSession}
-              className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-slate-200 px-5 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300"
+              className="btn-2d flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border-2 border-slate-900 bg-amber-300 px-5 py-2.5 text-xs sm:text-sm font-black text-slate-950 shadow-2d hover:bg-amber-200 cursor-pointer"
             >
               <RotateCcw className="h-4 w-4" />
               <span>Retry Session</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={onDone}
-              className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-black dark:bg-white dark:text-slate-900"
+              className="btn-2d flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border-2 border-slate-900 bg-slate-950 px-5 py-2.5 text-xs sm:text-sm font-black text-white shadow-2d hover:bg-slate-800 dark:bg-white dark:text-slate-950 cursor-pointer"
             >
               <span>Back to Home</span>
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>

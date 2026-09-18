@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Course, Folder, DocumentItem, DocumentChunk, Question } from '../types';
 import { parseUploadedFile } from '../lib/file-parser';
 import { chunkDocumentText } from '../lib/rag';
@@ -325,50 +326,59 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
       {/* Header & Course Switcher */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <div className="inline-flex items-center gap-1.5 rounded-full border-2 border-slate-900 bg-sky-200 px-3 py-0.5 text-xs font-black uppercase tracking-wider text-slate-950 shadow-2d-sm mb-2">
+            <FolderPlus className="h-3.5 w-3.5" />
+            <span>Knowledge Base</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950 dark:text-white">
             Courses & Study Materials
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Isolated knowledge repositories. Select or create a course to manage folders, upload documents, and train your AI.
+          <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mt-0.5">
+            Organize documents into isolated course workspaces. Upload notes, slides, and textbooks.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <button
+          <motion.button
+            type="button"
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => setShowCreateCourseModal(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700"
+            className="btn-2d flex items-center gap-1.5 rounded-xl border-2 border-slate-900 bg-amber-400 px-4 py-2.5 text-xs font-black text-slate-950 shadow-2d transition hover:bg-amber-300 cursor-pointer"
           >
             <FolderPlus className="h-4 w-4" />
-            <span>New Course</span>
-          </button>
+            <span>+ New Course</span>
+          </motion.button>
         </div>
       </div>
 
       {/* Courses Horizontal Selector Pills */}
       {courses.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+        <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none">
           {courses.map((c) => {
             const isSelected = c.id === currentCourse?.id;
             return (
-              <button
+              <motion.button
                 key={c.id}
+                type="button"
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={() => {
                   setActiveCourseId(c.id);
                   setSelectedFolderId(null);
                 }}
-                className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-medium transition ${
+                className={`flex shrink-0 items-center gap-2 rounded-xl border-2 border-slate-900 px-4 py-2 text-xs font-black transition cursor-pointer shadow-2d-sm ${
                   isSelected
-                    ? 'text-white shadow-md'
-                    : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
+                    ? 'bg-amber-300 text-slate-950 dark:bg-amber-400'
+                    : 'bg-white text-slate-800 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-200'
                 }`}
-                style={isSelected ? { backgroundColor: c.color || '#2563eb' } : undefined}
               >
                 <span
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: isSelected ? '#ffffff' : c.color || '#2563eb' }}
+                  className="h-2.5 w-2.5 rounded-full border border-slate-900"
+                  style={{ backgroundColor: c.color || '#2563eb' }}
                 />
-                <span className="font-semibold">{c.name}</span>
-              </button>
+                <span>{c.name}</span>
+              </motion.button>
             );
           })}
         </div>
@@ -378,55 +388,68 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
       {currentCourse && (
         <div className="space-y-6">
           {/* Course Metadata & Isolation Guarantee Banner */}
-          <div className="overflow-hidden rounded-2xl border-2 border-slate-300 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="h-2 w-full" style={{ backgroundColor: currentCourse.color || '#2563eb' }} />
+          <div className="card-2d overflow-hidden rounded-2xl border-2 border-slate-900 bg-white shadow-2d dark:border-slate-700 dark:bg-slate-900">
+            <div className="h-2.5 w-full border-b-2 border-slate-900" style={{ backgroundColor: currentCourse.color || '#2563eb' }} />
             <div className="p-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white">
                       {currentCourse.name}
                     </h2>
-                    <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-0.5 text-[11px] font-bold text-white shadow-xs">
+                    <div className="inline-flex items-center gap-1.5 rounded-full border-2 border-slate-900 bg-emerald-300 px-3 py-0.5 text-xs font-black text-slate-950 shadow-2d-sm">
                       <ShieldCheck className="h-3.5 w-3.5" />
                       <span>Isolated Knowledge Base</span>
                     </div>
                   </div>
-                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium max-w-xl">
-                    {currentCourse.description || 'All AI queries, question generation, and recall are strictly scoped to this course.'}
+                  <p className="mt-1.5 text-xs sm:text-sm text-slate-700 dark:text-slate-300 font-medium max-w-xl">
+                    {currentCourse.description || 'All AI queries, question generation, and active recall are strictly scoped to this course.'}
                   </p>
-                  <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-600 dark:text-slate-400 font-medium">
-                    <span><strong>{courseDocs.length}</strong> documents</span>
-                    <span>•</span>
-                    <span><strong>{courseChunks.length}</strong> indexed RAG chunks</span>
-                    <span>•</span>
-                    <span><strong>{courseQuestions.length}</strong> generated questions</span>
+                  <div className="mt-3.5 flex flex-wrap items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+                    <span className="rounded-lg border-2 border-slate-900 bg-slate-100 px-2.5 py-1 text-slate-950 shadow-2d-sm dark:bg-slate-800 dark:text-white">
+                      <strong>{courseDocs.length}</strong> documents
+                    </span>
+                    <span className="rounded-lg border-2 border-slate-900 bg-slate-100 px-2.5 py-1 text-slate-950 shadow-2d-sm dark:bg-slate-800 dark:text-white">
+                      <strong>{courseChunks.length}</strong> RAG chunks
+                    </span>
+                    <span className="rounded-lg border-2 border-slate-900 bg-slate-100 px-2.5 py-1 text-slate-950 shadow-2d-sm dark:bg-slate-800 dark:text-white">
+                      <strong>{courseQuestions.length}</strong> practice questions
+                    </span>
                   </div>
                 </div>
 
                 {/* Primary Action Buttons */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
                     onClick={() => onStartStudy(currentCourse.id)}
-                    className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-blue-700 active:scale-95 cursor-pointer"
+                    className="btn-2d flex items-center gap-1.5 rounded-xl border-2 border-slate-900 bg-amber-400 px-4 py-2.5 text-xs font-black text-slate-950 shadow-2d transition hover:bg-amber-300 cursor-pointer"
                   >
                     <Play className="h-3.5 w-3.5 fill-current" />
                     <span>Start Study</span>
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
                     onClick={() => onOpenQuestionGen(currentCourse.id)}
-                    className="flex items-center gap-1.5 rounded-xl border-2 border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
+                    className="btn-2d flex items-center gap-1.5 rounded-xl border-2 border-slate-900 bg-sky-200 px-4 py-2.5 text-xs font-black text-slate-950 shadow-2d hover:bg-sky-300 dark:bg-sky-900/60 dark:text-white cursor-pointer"
                   >
-                    <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                    <Sparkles className="h-3.5 w-3.5 text-slate-950 dark:text-sky-300" />
                     <span>Generate Questions</span>
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
                     onClick={() => onOpenTutor(currentCourse.id)}
-                    className="flex items-center gap-1.5 rounded-xl border-2 border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
+                    className="btn-2d flex items-center gap-1.5 rounded-xl border-2 border-slate-900 bg-emerald-200 px-4 py-2.5 text-xs font-black text-slate-950 shadow-2d hover:bg-emerald-300 dark:bg-emerald-900/60 dark:text-white cursor-pointer"
                   >
-                    <Brain className="h-3.5 w-3.5 text-purple-600" />
+                    <Brain className="h-3.5 w-3.5 text-slate-950 dark:text-emerald-300" />
                     <span>Ask AI Tutor</span>
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             </div>
@@ -435,33 +458,37 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
           {/* Folders & Documents Explorer */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
             {/* Folders Sidebar */}
-            <div className="rounded-2xl border-2 border-slate-300 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:col-span-1">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-                <span className="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
+            <div className="card-2d rounded-2xl border-2 border-slate-900 bg-white p-5 shadow-2d dark:border-slate-700 dark:bg-slate-900 lg:col-span-1">
+              <div className="flex items-center justify-between pb-3 border-b-2 border-slate-100 dark:border-slate-800">
+                <span className="font-black text-xs text-slate-950 dark:text-white uppercase tracking-wider">
                   Folders
                 </span>
-                <button
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setShowCreateFolderModal(true)}
-                  className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                  className="btn-2d text-xs text-slate-950 font-black flex items-center gap-1 rounded-lg border-2 border-slate-900 bg-amber-300 px-2 py-0.5 shadow-2d-sm cursor-pointer"
                 >
-                  <FolderPlus className="h-3.5 w-3.5" /> + New
-                </button>
+                  <FolderPlus className="h-3 w-3" /> + New
+                </motion.button>
               </div>
 
-              <div className="mt-3 space-y-1">
+              <div className="mt-3 space-y-1.5">
                 <button
+                  type="button"
                   onClick={() => setSelectedFolderId(null)}
-                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition cursor-pointer ${
+                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-black transition cursor-pointer border-2 ${
                     selectedFolderId === null
-                      ? 'bg-blue-600 text-white font-bold shadow-xs'
-                      : 'text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
+                      ? 'border-slate-900 bg-amber-300 text-slate-950 shadow-2d-sm'
+                      : 'border-transparent text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
                   }`}
                 >
                   <span className="flex items-center gap-2">
-                    <FolderIcon className={`h-4 w-4 ${selectedFolderId === null ? 'text-white' : 'text-blue-500'}`} />
+                    <FolderIcon className={`h-4 w-4 ${selectedFolderId === null ? 'text-slate-950' : 'text-amber-500'}`} />
                     All Materials
                   </span>
-                  <span className={`text-[10px] ${selectedFolderId === null ? 'text-white/90 font-bold' : 'text-slate-400'}`}>
+                  <span className={`text-[11px] font-black ${selectedFolderId === null ? 'text-slate-950' : 'text-slate-500'}`}>
                     {documents.filter((d) => d.courseId === currentCourse.id).length}
                   </span>
                 </button>
@@ -475,28 +502,30 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
                   return (
                     <button
                       key={f.id}
+                      type="button"
                       onClick={() => setSelectedFolderId(f.id)}
-                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium transition ${
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-black transition cursor-pointer border-2 ${
                         isSelected
-                          ? 'bg-blue-50 text-blue-700 font-semibold dark:bg-blue-950/40 dark:text-blue-300'
-                          : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800'
+                          ? 'border-slate-900 bg-sky-200 text-slate-950 shadow-2d-sm dark:bg-sky-950/60 dark:text-white dark:border-sky-400'
+                          : 'border-transparent text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
                       }`}
                     >
                       <span className="flex items-center gap-2 line-clamp-1">
                         <FolderIcon className="h-4 w-4 text-amber-500" />
                         {f.name}
                       </span>
-                      <span className="text-[10px] text-slate-400">{folderDocsCount}</span>
+                      <span className="text-[11px] font-bold text-slate-500">{folderDocsCount}</span>
                     </button>
                   );
                 })}
               </div>
 
               {/* Course Danger Zone */}
-              <div className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="mt-8 pt-4 border-t-2 border-slate-100 dark:border-slate-800">
                 <button
+                  type="button"
                   onClick={() => handleDeleteCourse(currentCourse.id)}
-                  className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 transition"
+                  className="flex items-center gap-1.5 text-xs font-black text-rose-600 hover:text-rose-700 transition cursor-pointer"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   <span>Delete this course</span>
@@ -513,7 +542,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
                   e.preventDefault();
                   handleFilesSelected(e.dataTransfer.files);
                 }}
-                className="relative rounded-2xl border-2 border-dashed border-blue-400 bg-blue-50/40 p-8 text-center transition hover:border-blue-600 hover:bg-blue-50 dark:border-blue-700 dark:bg-slate-900"
+                className="card-2d relative rounded-2xl border-2 border-dashed border-slate-900 bg-amber-50/60 p-8 text-center shadow-2d-sm dark:border-slate-600 dark:bg-slate-800/40"
               >
                 <input
                   type="file"
@@ -533,89 +562,85 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
                   className="hidden"
                 />
 
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-500/30">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-slate-900 bg-amber-400 text-slate-950 shadow-2d">
                   <UploadCloud className="h-7 w-7" />
                 </div>
 
-                <h3 className="mt-3 text-base font-bold text-slate-900 dark:text-white">
+                <h3 className="mt-3 text-base sm:text-lg font-black text-slate-950 dark:text-white">
                   Drop documents to import into {currentCourse.name}
                 </h3>
-                <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto font-medium">
                   Instant preview & chunk verification before indexing. Supports PDF, PowerPoint (.pptx), Word (.docx), TXT, Markdown, and Images.
                 </p>
 
                 {isUploading ? (
-                  <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md">
+                  <div className="mt-4 inline-flex items-center gap-2 rounded-xl border-2 border-slate-900 bg-amber-300 px-5 py-2.5 text-xs font-black text-slate-950 shadow-2d-sm">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span>{uploadProgressText}</span>
                   </div>
                 ) : (
                   <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-                    <button
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-blue-700 active:scale-95 transition"
+                      className="btn-2d flex items-center gap-2 rounded-xl border-2 border-slate-900 bg-amber-400 px-5 py-2.5 text-xs font-black text-slate-950 shadow-2d hover:bg-amber-300 transition cursor-pointer"
                     >
                       <Plus className="h-4 w-4" />
                       <span>Select Files with Preview</span>
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
                       onClick={() => folderInputRef.current?.click()}
-                      className="flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
+                      className="btn-2d flex items-center gap-2 rounded-xl border-2 border-slate-900 bg-white px-4 py-2.5 text-xs font-black text-slate-900 shadow-2d hover:bg-slate-100 dark:bg-slate-800 dark:text-white transition cursor-pointer"
                     >
                       <FolderPlus className="h-4 w-4 text-amber-500" />
                       <span>Import Entire Folder</span>
-                    </button>
+                    </motion.button>
                   </div>
                 )}
               </div>
 
               {/* Documents List & Search */}
-              <div className="rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+              <div className="card-2d rounded-2xl border-2 border-slate-900 bg-white p-5 shadow-2d dark:border-slate-700 dark:bg-slate-900">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b-2 border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                    <h3 className="font-black text-sm text-slate-950 dark:text-white">
                       {selectedFolderId
                         ? `Documents in "${courseFolders.find((f) => f.id === selectedFolderId)?.name}"`
                         : 'All Course Documents'}
                     </h3>
-                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                    <span className="rounded-full border-2 border-slate-900 bg-sky-200 px-2 py-0.5 text-[11px] font-black text-slate-950 shadow-2d-sm">
                       {filteredDocs.length}
                     </span>
                   </div>
 
                   <div className="relative w-full sm:w-64">
-                    <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                    <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search files..."
-                      className="w-full rounded-xl border border-slate-300 bg-slate-50 py-1.5 pl-8 pr-3 text-xs text-slate-900 focus:border-blue-600 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                      className="w-full rounded-xl border-2 border-slate-900 bg-slate-50 py-1.5 pl-8 pr-3 text-xs font-bold text-slate-950 focus:border-amber-400 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                     />
                   </div>
                 </div>
 
-                <div className="mt-4 space-y-2.5">
+                <div className="mt-4 space-y-3">
                   {filteredDocs.length > 0 ? (
                     filteredDocs.map((doc) => {
                       const docChunksCount = chunks.filter((c) => c.documentId === doc.id).length;
                       return (
                         <div
                           key={doc.id}
-                          className="flex items-center justify-between rounded-xl border-2 border-slate-200 bg-slate-50/50 p-3.5 transition hover:border-slate-300 hover:bg-white dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-slate-700"
+                          className="card-2d flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border-2 border-slate-900 bg-white p-3.5 shadow-2d-sm transition hover:translate-x-1 dark:border-slate-700 dark:bg-slate-850"
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-xs ${
-                              doc.fileType === 'pdf'
-                                ? 'bg-rose-600'
-                                : doc.fileType === 'image'
-                                ? 'bg-emerald-600'
-                                : doc.fileType === 'docx'
-                                ? 'bg-blue-600'
-                                : doc.fileType === 'pptx'
-                                ? 'bg-amber-600'
-                                : 'bg-purple-600'
-                            }`}>
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-slate-900 bg-amber-300 text-slate-950 font-black shadow-2d-sm">
                               {doc.fileType === 'pdf' ? (
                                 <FileText className="h-5 w-5" />
                               ) : doc.fileType === 'image' ? (
@@ -626,52 +651,47 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white line-clamp-1">
+                                <h4 className="font-black text-xs sm:text-sm text-slate-950 dark:text-white line-clamp-1">
                                   {doc.filename}
                                 </h4>
-                                <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white ${
-                                  doc.fileType === 'pdf'
-                                    ? 'bg-rose-600'
-                                    : doc.fileType === 'image'
-                                    ? 'bg-emerald-600'
-                                    : doc.fileType === 'docx'
-                                    ? 'bg-blue-600'
-                                    : doc.fileType === 'pptx'
-                                    ? 'bg-amber-600'
-                                    : 'bg-purple-600'
-                                }`}>
+                                <span className="rounded border border-slate-900 bg-sky-200 px-1.5 py-0.2 text-[9px] font-black uppercase tracking-wider text-slate-950">
                                   {doc.fileType}
                                 </span>
                               </div>
-                              <p className="mt-0.5 text-[11px] font-medium text-slate-500">
+                              <p className="mt-0.5 text-[11px] font-bold text-slate-600 dark:text-slate-400">
                                 {Math.round(doc.fileSize / 1024)} KB • {doc.pageCount} Pages • {docChunksCount} RAG Chunks
                               </p>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
-                            <button
+                          <div className="flex items-center gap-2 self-end sm:self-center">
+                            <motion.button
+                              type="button"
+                              whileHover={{ scale: 1.04 }}
+                              whileTap={{ scale: 0.96 }}
                               onClick={() => setPreviewDoc(doc)}
-                              className="flex items-center gap-1.5 rounded-xl border-2 border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
+                              className="btn-2d flex items-center gap-1.5 rounded-xl border-2 border-slate-900 bg-sky-200 px-3 py-1.5 text-xs font-black text-slate-950 shadow-2d-sm hover:bg-sky-300 dark:bg-sky-900/60 dark:text-white transition cursor-pointer"
                               title="Inspect & Preview Document"
                             >
-                              <Eye className="h-3.5 w-3.5 text-blue-600" />
-                              <span className="hidden sm:inline">Preview & Inspect</span>
-                              <span className="sm:hidden">Preview</span>
-                            </button>
-                            <button
+                              <Eye className="h-3.5 w-3.5" />
+                              <span>Preview & Inspect</span>
+                            </motion.button>
+                            <motion.button
+                              type="button"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
                               onClick={() => handleDeleteDoc(doc.id)}
-                              className="rounded-lg p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
+                              className="btn-2d rounded-xl border-2 border-slate-900 bg-rose-200 p-2 text-slate-950 shadow-2d-sm hover:bg-rose-300 transition cursor-pointer"
                               title="Delete document"
                             >
                               <Trash2 className="h-4 w-4" />
-                            </button>
+                            </motion.button>
                           </div>
                         </div>
                       );
                     })
                   ) : (
-                    <div className="py-12 text-center text-xs text-slate-500">
+                    <div className="py-12 text-center text-xs font-bold text-slate-500">
                       No documents found in this folder. Drag and drop notes above to preview and index them.
                     </div>
                   )}
@@ -781,18 +801,18 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 animate-in fade-in duration-150">
           <form
             onSubmit={handleCreateCourse}
-            className="w-full max-w-md rounded-2xl border-2 border-slate-300 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+            className="card-2d w-full max-w-md rounded-2xl border-2 border-slate-900 bg-white p-6 shadow-2d dark:border-slate-700 dark:bg-slate-900"
           >
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            <h3 className="text-lg font-black text-slate-950 dark:text-white">
               Create New Course
             </h3>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs font-medium text-slate-600 dark:text-slate-400">
               A dedicated, isolated knowledge silo for this subject.
             </p>
 
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-3.5">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                <label className="block text-xs font-black text-slate-900 dark:text-slate-200">
                   Course Title
                 </label>
                 <input
@@ -801,12 +821,12 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
                   value={newCourseName}
                   onChange={(e) => setNewCourseName(e.target.value)}
                   placeholder="e.g. Organic Chemistry II, Microeconomics..."
-                  className="mt-1 w-full rounded-xl border-2 border-slate-300 bg-slate-50 p-2.5 text-xs text-slate-900 focus:border-blue-600 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  className="mt-1 w-full rounded-xl border-2 border-slate-900 bg-slate-50 p-2.5 text-xs font-bold text-slate-950 focus:border-amber-400 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                <label className="block text-xs font-black text-slate-900 dark:text-slate-200">
                   Description
                 </label>
                 <textarea
@@ -814,12 +834,12 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
                   value={newCourseDesc}
                   onChange={(e) => setNewCourseDesc(e.target.value)}
                   placeholder="Topics covered, syllabus focus, exam dates..."
-                  className="mt-1 w-full rounded-xl border-2 border-slate-300 bg-slate-50 p-2.5 text-xs text-slate-900 focus:border-blue-600 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  className="mt-1 w-full rounded-xl border-2 border-slate-900 bg-slate-50 p-2.5 text-xs font-bold text-slate-950 focus:border-amber-400 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                <label className="block text-xs font-black text-slate-900 dark:text-slate-200">
                   Theme Color
                 </label>
                 <div className="mt-2 flex flex-wrap items-center gap-2.5">
@@ -829,17 +849,17 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
                       key={c.hex}
                       onClick={() => setNewCourseColor(c.hex)}
                       title={c.name}
-                      className={`h-7 w-7 rounded-full border-2 transition-all ${
+                      className={`h-7 w-7 rounded-full border-2 transition-all cursor-pointer ${
                         newCourseColor.toLowerCase() === c.hex.toLowerCase()
-                          ? 'border-slate-900 dark:border-white scale-115 shadow-md'
-                          : 'border-transparent hover:scale-110 opacity-90 hover:opacity-100'
+                          ? 'border-slate-900 dark:border-white scale-120 shadow-2d-sm ring-2 ring-amber-400'
+                          : 'border-slate-900/40 hover:scale-110 opacity-90 hover:opacity-100'
                       }`}
                       style={{ backgroundColor: c.hex }}
                     />
                   ))}
                   {/* Custom Hex Color Picker */}
                   <label
-                    className="relative flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-slate-300 transition-all hover:scale-110 dark:border-slate-600 overflow-hidden"
+                    className="relative flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-2 border-slate-900 transition-all hover:scale-110 overflow-hidden shadow-2d-sm"
                     title="Choose custom color"
                   >
                     <input
@@ -854,26 +874,28 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
                     />
                   </label>
                 </div>
-                <p className="mt-1.5 text-[11px] text-slate-500">
-                  Selected: <span className="font-mono font-bold">{newCourseColor}</span>
+                <p className="mt-1.5 text-[11px] font-bold text-slate-500">
+                  Selected: <span className="font-mono font-black">{newCourseColor}</span>
                 </p>
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-6 flex justify-end gap-2.5">
               <button
                 type="button"
                 onClick={() => setShowCreateCourseModal(false)}
-                className="rounded-xl border-2 border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                className="btn-2d rounded-xl border-2 border-slate-900 bg-white px-4 py-2 text-xs font-black text-slate-900 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
               >
                 Cancel
               </button>
-              <button
+              <motion.button
                 type="submit"
-                className="rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md hover:bg-blue-700 transition"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                className="btn-2d rounded-xl border-2 border-slate-900 bg-amber-400 px-5 py-2 text-xs font-black text-slate-950 shadow-2d hover:bg-amber-300 transition cursor-pointer"
               >
                 Create Course
-              </button>
+              </motion.button>
             </div>
           </form>
         </div>
@@ -884,17 +906,17 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 animate-in fade-in duration-150">
           <form
             onSubmit={handleCreateFolder}
-            className="w-full max-w-sm rounded-2xl border-2 border-slate-300 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+            className="card-2d w-full max-w-sm rounded-2xl border-2 border-slate-900 bg-white p-6 shadow-2d dark:border-slate-700 dark:bg-slate-900"
           >
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            <h3 className="text-base font-black text-slate-950 dark:text-white">
               Create Folder
             </h3>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs font-medium text-slate-600 dark:text-slate-400">
               Organize lecture slides, textbooks, and notes.
             </p>
 
             <div className="mt-4">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-black text-slate-900 dark:text-slate-200">
                 Folder Name
               </label>
               <input
@@ -903,24 +925,26 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
                 placeholder="e.g. Chapter 4 - Thermodynamics"
-                className="mt-1 w-full rounded-xl border-2 border-slate-300 bg-slate-50 p-2.5 text-xs text-slate-900 focus:border-blue-600 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="mt-1 w-full rounded-xl border-2 border-slate-900 bg-slate-50 p-2.5 text-xs font-bold text-slate-950 focus:border-amber-400 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
             </div>
 
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-6 flex justify-end gap-2.5">
               <button
                 type="button"
                 onClick={() => setShowCreateFolderModal(false)}
-                className="rounded-xl border-2 border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                className="btn-2d rounded-xl border-2 border-slate-900 bg-white px-4 py-2 text-xs font-black text-slate-900 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
               >
                 Cancel
               </button>
-              <button
+              <motion.button
                 type="submit"
-                className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:bg-blue-700 transition"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                className="btn-2d rounded-xl border-2 border-slate-900 bg-amber-400 px-4 py-2 text-xs font-black text-slate-950 shadow-2d hover:bg-amber-300 transition cursor-pointer"
               >
                 Save Folder
-              </button>
+              </motion.button>
             </div>
           </form>
         </div>

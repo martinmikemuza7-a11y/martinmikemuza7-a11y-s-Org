@@ -832,30 +832,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
                 <div className="font-semibold text-xs text-emerald-600 flex items-center gap-1.5">
                   <Smartphone className="h-4 w-4" />
-                  <span>Android (.apk)</span>
+                  <span>Android (WebAPK)</span>
                 </div>
                 <p className="mt-1 text-[11px] text-slate-500">
-                  Direct installable release APK. Complete offline storage with Capacitor.
+                  Native Android app installation via Chrome. Home screen icon, splash screen, and offline storage.
                 </p>
               </div>
 
               <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
                 <div className="font-semibold text-xs text-blue-600 flex items-center gap-1.5">
                   <Monitor className="h-4 w-4" />
-                  <span>Windows (.exe)</span>
+                  <span>Windows Desktop</span>
                 </div>
                 <p className="mt-1 text-[11px] text-slate-500">
-                  Standalone desktop installer with Electron and native window controls.
+                  Standalone desktop app with dedicated window, Start menu, and taskbar integration.
                 </p>
               </div>
 
               <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
                 <div className="font-semibold text-xs text-purple-600 flex items-center gap-1.5">
                   <Download className="h-4 w-4" />
-                  <span>Web PWA</span>
+                  <span>PWABuilder Package</span>
                 </div>
                 <p className="mt-1 text-[11px] text-slate-500">
-                  {isInstalled ? 'Running in Standalone Mode.' : 'Zero-install offline caching via Service Worker.'}
+                  {isInstalled ? 'Running in Standalone Mode.' : 'Generate signed Play Store APK or Windows installer via PWABuilder.'}
                 </p>
               </div>
             </div>
