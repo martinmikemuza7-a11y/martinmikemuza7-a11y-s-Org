@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --color-primary: #8b5cf6;
+    --color-primary-hover: #7c3aed;
+    --color-primary-light: #ede9fe;
+    --color-primary-subtle: #f5f3ff;
+    --color-theme-ring: rgba(139, 92, 246, 0.4);
+    --color-theme-glow: rgba(139, 92, 246, 0.25);
+    
+    /* 2D Flat Color Palette */
+    --color-2d-yellow: #fde047;
+    --color-2d-blue: #38bdf8;
+    --color-2d-emerald: #34d399;
+    --color-2d-coral: #fb7185;
+    --color-2d-purple: #a78bfa;
+    --color-2d-orange: #fb923c;
+    --color-2d-ink: #0f172a;
+  }
+  :root.dark,
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --color-2d-ink: #f8fafc;
+  }
+  body {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+  ::selection {
+    background-color: #fde047;
+    color: #0f172a;
+  }
+}
+
+/* 2D Neo-Flat Tactile Styling Utilities */
+.shadow-2d {
+  box-shadow: 4px 4px 0px 0px #0f172a;
+}
+:is(.dark, [data-theme="dark"]) .shadow-2d {
+  box-shadow: 4px 4px 0px 0px #334155;
+}
+
+.shadow-2d-sm {
+  box-shadow: 2px 2px 0px 0px #0f172a;
+}
+:is(.dark, [data-theme="dark"]) .shadow-2d-sm {
+  box-shadow: 2px 2px 0px 0px #334155;
+}
+
+.shadow-2d-lg {
+  box-shadow: 6px 6px 0px 0px #0f172a;
+}
+:is(.dark, [data-theme="dark"]) .shadow-2d-lg {
+  box-shadow: 6px 6px 0px 0px #334155;
+}
+
+.shadow-2d-yellow {
+  box-shadow: 4px 4px 0px 0px #ca8a04;
+}
+
+.shadow-2d-blue {
+  box-shadow: 4px 4px 0px 0px #0284c7;
+}
+
+.shadow-2d-emerald {
+  box-shadow: 4px 4px 0px 0px #059669;
+}
+
+.shadow-2d-rose {
+  box-shadow: 4px 4px 0px 0px #e11d48;
+}
+
+.shadow-2d-purple {
+  box-shadow: 4px 4px 0px 0px #7c3aed;
+}
+
+/* 2D Tactile Click & Hover Behaviors */
+.btn-2d {
+  border-width: 2px;
+  border-color: #0f172a;
+  box-shadow: 3px 3px 0px 0px #0f172a;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+:is(.dark, [data-theme="dark"]) .btn-2d {
+  border-color: #475569;
+  box-shadow: 3px 3px 0px 0px #334155;
+}
+.btn-2d:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px 0px #0f172a;
+}
+:is(.dark, [data-theme="dark"]) .btn-2d:hover {
+  box-shadow: 4px 4px 0px 0px #334155;
+}
+.btn-2d:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px 0px #0f172a;
+}
+:is(.dark, [data-theme="dark"]) .btn-2d:active {
+  box-shadow: 1px 1px 0px 0px #334155;
+}
+
+.card-2d {
+  border-width: 2px;
+  border-color: #0f172a;
+  box-shadow: 4px 4px 0px 0px #0f172a;
+  border-radius: 1.25rem;
+}
+:is(.dark, [data-theme="dark"]) .card-2d {
+  border-color: #334155;
+  box-shadow: 4px 4px 0px 0px #1e293b;
+}
+
+.badge-2d {
+  border-width: 2px;
+  border-color: #0f172a;
+  box-shadow: 2px 2px 0px 0px #0f172a;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+:is(.dark, [data-theme="dark"]) .badge-2d {
+  border-color: #475569;
+  box-shadow: 2px 2px 0px 0px #334155;
+}
+
+/* Gemini Thinking Engine Animated Keyframes */
+@keyframes thinkingPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.85;
+  }
+}
+
+@keyframes brainWave {
+  0% {
+    box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(168, 85, 247, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(168, 85, 247, 0);
+  }
+}
+
+.animate-thinking {
+  animation: thinkingPulse 2s ease-in-out infinite;
+}
+
+.animate-brain-wave {
+  animation: brainWave 2.2s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

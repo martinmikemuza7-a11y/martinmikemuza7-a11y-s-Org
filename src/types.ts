@@ -1,0 +1,182 @@
+export type AIStatus = 'online' | 'offline_ai' | 'offline_none';
+
+export type QuestionType = 'multiple_choice' | 'true_false' | 'short_answer';
+export type DifficultyLevel = 'Easy' | 'Medium' | 'Hard' | 'Mixed';
+export type RecurrenceType = 'once' | 'daily' | '3days' | 'weekly' | 'spaced';
+export type ThemeMode = 'light' | 'dark' | 'system';
+export type ColorThemeId = 'violet' | 'blue' | 'emerald' | 'amber' | 'rose' | 'cyan' | 'sunset';
+
+export interface User {
+  id: string;
+  name: string;
+  email?: string;
+  avatar?: string;
+}
+
+export interface Course {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  icon?: string;
+  category?: string;
+  lastStudiedAt?: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface Subject {
+  id: string;
+  courseId: string;
+  name: string;
+  description?: string;
+}
+
+export interface Folder {
+  id: string;
+  courseId: string;
+  parentFolderId?: string | null;
+  name: string;
+}
+
+export interface DocumentItem {
+  id: string;
+  courseId: string;
+  subjectId?: string;
+  folderId?: string;
+  filename: string;
+  fileType: 'pdf' | 'pptx' | 'docx' | 'txt' | 'image' | 'other';
+  fileSize: number;
+  extractedText?: string;
+  pageCount?: number;
+  processingStatus: 'pending' | 'processing' | 'ready' | 'error';
+  errorMessage?: string;
+  createdAt: number;
+}
+
+export interface DocumentChunk {
+  id: string;
+  documentId: string;
+  courseId: string;
+  subjectId?: string;
+  folderId?: string;
+  filename: string;
+  text: string;
+  pageNumber?: number | string;
+  chunkIndex: number;
+  tokensCount?: number;
+  embeddingVector?: number[]; // lightweight term-frequency vector
+}
+
+export interface Question {
+  id: string;
+  courseId: string;
+  subjectId?: string;
+  folderId?: string;
+  sourceDocumentId?: string;
+  sourceCitation: string; // e.g. "Cellular Biology Notes.pdf — Page 4"
+  type: QuestionType;
+  question: string;
+  options?: string[]; // 4 for MC, 2 for TF, undefined/empty for Short Answer
+  correctAnswer: string;
+  explanation: string;
+  reasoning?: string; // Gemini pedagogical thinking & reasoning explanation
+  difficulty: DifficultyLevel;
+  keyConcepts?: string[];
+  createdAt: number;
+}
+
+export interface Attempt {
+  id: string;
+  questionId: string;
+  courseId: string;
+  answer: string;
+  evaluation: 'Correct' | 'Partial' | 'Incorrect';
+  score: number; // 0 to 100
+  feedback: string;
+  createdAt: number;
+}
+
+export interface RecallSchedule {
+  id: string;
+  courseId: string;
+  subjectId?: string;
+  folderId?: string;
+  title: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:MM
+  recurrence: RecurrenceType;
+  questionCount: number;
+  questionType: QuestionType | 'mixed';
+  difficulty: DifficultyLevel;
+  enabled: boolean;
+  lastNotifiedAt?: number;
+  createdAt: number;
+}
+
+export interface StudySession {
+  id: string;
+  userId: string;
+  courseId: string;
+  title: string;
+  durationMinutes: number;
+  elapsedSeconds: number;
+  score: number;
+  questionsCount: number;
+  correctCount: number;
+  partialCount: number;
+  incorrectCount: number;
+  weakTopics: string[];
+  createdAt: number;
+  completedAt?: number;
+}
+
+export interface ProgressSummary {
+  userId: string;
+  courseId: string;
+  courseName: string;
+  accuracy: number;
+  completedQuestions: number;
+  totalAttempts: number;
+  lastStudiedAt: number;
+  weakConcepts: string[];
+}
+
+export interface AppSettings {
+  aiMode: 'auto' | 'online_only' | 'offline_only';
+  researchMode: boolean;
+  defaultSessionDuration: number;
+  defaultQuestionCount: number;
+  defaultDifficulty: DifficultyLevel;
+  notificationsEnabled: boolean;
+  reminderSound: boolean;
+  autoSync: boolean;
+  wifiOnly: boolean;
+  syncDocuments: boolean; // Opt-in private file upload
+  theme: ThemeMode;
+  colorTheme: ColorThemeId;
+  reducedMotion: boolean;
+  userName: string;
+  userEmail: string;
+}
+
+export interface SyncQueueItem {
+  id: string;
+  entityType: 'course' | 'folder' | 'document' | 'question' | 'attempt' | 'schedule' | 'session';
+  entityId: string;
+  action: 'create' | 'update' | 'delete';
+  payload: any;
+  timestamp: number;
+}
+
+export interface TutorMessage {
+  id: string;
+  courseId: string;
+  role: 'user' | 'assistant';
+  text: string;
+  reasoning?: string; // Gemini thinking & reasoning breakdown
+  thinkingSteps?: string[]; // Cognitive steps performed by Gemini
+  citations?: string[];
+  webSources?: string[];
+  timestamp: number;
+}

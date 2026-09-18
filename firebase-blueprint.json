@@ -1,0 +1,180 @@
+{
+  "entities": {
+    "userProfile": {
+      "title": "UserProfile",
+      "description": "User profile information and cloud sync metadata",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "displayName": { "type": "string", "maxLength": 128 },
+        "photoURL": { "type": "string", "maxLength": 512 },
+        "lastSyncedAt": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "email"]
+    },
+    "course": {
+      "title": "Course",
+      "description": "A subject or course knowledge base containing materials and isolated notes",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "color": { "type": "string", "maxLength": 32 },
+        "icon": { "type": "string", "maxLength": 64 },
+        "category": { "type": "string", "maxLength": 64 },
+        "lastStudiedAt": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "userId", "name", "color", "createdAt", "updatedAt"]
+    },
+    "folder": {
+      "title": "Folder",
+      "description": "A folder to categorize course notes and lecture materials",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "parentFolderId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 200 }
+      },
+      "required": ["id", "userId", "courseId", "name"]
+    },
+    "documentItem": {
+      "title": "DocumentItem",
+      "description": "An uploaded document, lecture slide, or note syllabus synchronized across PC and mobile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "folderId": { "type": "string", "maxLength": 128 },
+        "filename": { "type": "string", "maxLength": 300 },
+        "fileType": { "type": "string", "maxLength": 32 },
+        "fileSize": { "type": "number" },
+        "extractedText": { "type": "string", "maxLength": 800000 },
+        "pageCount": { "type": "number" },
+        "processingStatus": { "type": "string", "maxLength": 32 },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "userId", "courseId", "filename", "fileType", "fileSize", "createdAt"]
+    },
+    "documentChunk": {
+      "title": "DocumentChunk",
+      "description": "A semantically chunked snippet of study notes used for offline and cloud AI retrieval",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "documentId": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "folderId": { "type": "string", "maxLength": 128 },
+        "filename": { "type": "string", "maxLength": 300 },
+        "text": { "type": "string", "maxLength": 20000 },
+        "pageNumber": { "type": "string", "maxLength": 32 },
+        "chunkIndex": { "type": "number" }
+      },
+      "required": ["id", "userId", "documentId", "courseId", "filename", "text", "chunkIndex"]
+    },
+    "question": {
+      "title": "Question",
+      "description": "A flashcard or practice question created from uploaded study materials",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "folderId": { "type": "string", "maxLength": 128 },
+        "sourceCitation": { "type": "string", "maxLength": 300 },
+        "type": { "type": "string", "maxLength": 32 },
+        "question": { "type": "string", "maxLength": 5000 },
+        "options": { "type": "string", "maxLength": 4000 },
+        "correctAnswer": { "type": "string", "maxLength": 2000 },
+        "explanation": { "type": "string", "maxLength": 4000 },
+        "difficulty": { "type": "string", "maxLength": 32 },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "userId", "courseId", "type", "question", "correctAnswer", "explanation", "createdAt"]
+    },
+    "recallSchedule": {
+      "title": "RecallSchedule",
+      "description": "Active recall revision schedule for spaced repetition across phone and PC",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "date": { "type": "string", "maxLength": 32 },
+        "time": { "type": "string", "maxLength": 32 },
+        "recurrence": { "type": "string", "maxLength": 32 },
+        "questionCount": { "type": "number" },
+        "questionType": { "type": "string", "maxLength": 32 },
+        "difficulty": { "type": "string", "maxLength": 32 },
+        "enabled": { "type": "boolean" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "userId", "courseId", "title", "date", "time", "recurrence", "enabled", "createdAt"]
+    },
+    "studySession": {
+      "title": "StudySession",
+      "description": "Completed study session history and scores for learning analytics",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "durationMinutes": { "type": "number" },
+        "elapsedSeconds": { "type": "number" },
+        "score": { "type": "number" },
+        "questionsCount": { "type": "number" },
+        "correctCount": { "type": "number" },
+        "partialCount": { "type": "number" },
+        "incorrectCount": { "type": "number" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "userId", "courseId", "title", "score", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "userProfile",
+      "description": "User profile with sync status and settings"
+    },
+    "/users/{userId}/courses/{courseId}": {
+      "schema": "course",
+      "description": "User course collections synchronized cross-device"
+    },
+    "/users/{userId}/folders/{folderId}": {
+      "schema": "folder",
+      "description": "User folder hierarchy synchronized cross-device"
+    },
+    "/users/{userId}/documents/{documentId}": {
+      "schema": "documentItem",
+      "description": "User uploaded documents and syllabus files"
+    },
+    "/users/{userId}/chunks/{chunkId}": {
+      "schema": "documentChunk",
+      "description": "Indexed study material text chunks"
+    },
+    "/users/{userId}/questions/{questionId}": {
+      "schema": "question",
+      "description": "Practice flashcards and active recall questions"
+    },
+    "/users/{userId}/schedules/{scheduleId}": {
+      "schema": "recallSchedule",
+      "description": "Spaced repetition active recall schedules"
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": "studySession",
+      "description": "Completed study session summaries and history"
+    }
+  }
+}

@@ -1,0 +1,87 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net: Default-deny all unspecified paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Security Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // User Profile & Settings
+    match /users/{userId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(userId);
+      allow update: if isOwner(userId) && isValidId(userId);
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      // Courses Subcollection
+      match /courses/{courseId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(courseId) && request.resource.data.userId == userId;
+        allow update: if isOwner(userId) && isValidId(courseId) && request.resource.data.userId == userId;
+        allow delete: if isOwner(userId) && isValidId(courseId);
+      }
+
+      // Folders Subcollection
+      match /folders/{folderId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(folderId) && request.resource.data.userId == userId;
+        allow update: if isOwner(userId) && isValidId(folderId) && request.resource.data.userId == userId;
+        allow delete: if isOwner(userId) && isValidId(folderId);
+      }
+
+      // Documents Subcollection (uploaded files, notes, summaries)
+      match /documents/{documentId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(documentId) && request.resource.data.userId == userId;
+        allow update: if isOwner(userId) && isValidId(documentId) && request.resource.data.userId == userId;
+        allow delete: if isOwner(userId) && isValidId(documentId);
+      }
+
+      // Chunks Subcollection (text segments for RAG)
+      match /chunks/{chunkId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(chunkId) && request.resource.data.userId == userId;
+        allow update: if isOwner(userId) && isValidId(chunkId) && request.resource.data.userId == userId;
+        allow delete: if isOwner(userId) && isValidId(chunkId);
+      }
+
+      // Questions Subcollection (flashcards & quizzes)
+      match /questions/{questionId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(questionId) && request.resource.data.userId == userId;
+        allow update: if isOwner(userId) && isValidId(questionId) && request.resource.data.userId == userId;
+        allow delete: if isOwner(userId) && isValidId(questionId);
+      }
+
+      // Recall Schedules Subcollection
+      match /schedules/{scheduleId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(scheduleId) && request.resource.data.userId == userId;
+        allow update: if isOwner(userId) && isValidId(scheduleId) && request.resource.data.userId == userId;
+        allow delete: if isOwner(userId) && isValidId(scheduleId);
+      }
+
+      // Study Sessions Subcollection
+      match /sessions/{sessionId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(sessionId) && request.resource.data.userId == userId;
+        allow update: if isOwner(userId) && isValidId(sessionId) && request.resource.data.userId == userId;
+        allow delete: if isOwner(userId) && isValidId(sessionId);
+      }
+    }
+  }
+}

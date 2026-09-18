@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1d4ed8"/>
+      <stop offset="50%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- Open Book Base -->
+  <path d="M120 370 C180 340, 230 350, 256 370 C282 350, 332 340, 392 370 L392 180 C332 150, 282 160, 256 180 C230 160, 180 150, 120 180 Z" fill="#ffffff" fill-opacity="0.95"/>
+  <path d="M256 180 L256 370" stroke="#2563eb" stroke-width="8" stroke-linecap="round"/>
+  <!-- AI Sparkle / Brain Nodes -->
+  <circle cx="256" cy="115" r="28" fill="url(#glow)"/>
+  <path d="M256 70 L256 95 M256 135 L256 160 M211 115 L236 115 M276 115 L301 115" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="190" cy="130" r="12" fill="#38bdf8"/>
+  <circle cx="322" cy="130" r="12" fill="#818cf8"/>
+  <line x1="200" y1="126" x2="230" y2="119" stroke="#ffffff" stroke-width="4" stroke-opacity="0.8"/>
+  <line x1="312" y1="126" x2="282" y2="119" stroke="#ffffff" stroke-width="4" stroke-opacity="0.8"/>
+  <!-- Book lines -->
+  <line x1="150" y1="230" x2="225" y2="220" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round"/>
+  <line x1="150" y1="265" x2="220" y2="255" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round"/>
+  <line x1="150" y1="300" x2="210" y2="290" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round"/>
+  <line x1="287" y1="220" x2="362" y2="230" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round"/>
+  <line x1="292" y1="255" x2="362" y2="265" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round"/>
+  <line x1="302" y1="290" x2="362" y2="300" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round"/>
+</svg>

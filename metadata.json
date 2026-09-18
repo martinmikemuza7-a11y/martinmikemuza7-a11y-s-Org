@@ -1,0 +1,6 @@
+{
+  "name": "StudyBuddy AI",
+  "description": "Production-ready online & offline AI study platform with course-isolated RAG, active recall, question generation, and cross-platform Android & Desktop support.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
