@@ -164,7 +164,8 @@ export class AIEngine {
     chunks: DocumentChunk[],
     count = 5,
     difficulty: DifficultyLevel = 'Mixed',
-    questionTypes: QuestionType[] = ['multiple_choice', 'true_false', 'short_answer']
+    questionTypes: QuestionType[] = ['multiple_choice', 'true_false', 'short_answer'],
+    sourceDocumentName?: string
   ): Promise<Question[]> {
     if (!chunks || chunks.length === 0) {
       throw new Error('No study material chunks selected for question generation.');
@@ -181,7 +182,7 @@ export class AIEngine {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             courseName,
-            materialChunks: chunks.map((c) => ({
+            materialChunks: chunks.slice(0, 35).map((c) => ({
               source: c.filename,
               page: c.pageNumber,
               text: c.text,
@@ -189,6 +190,7 @@ export class AIEngine {
             count,
             difficulty,
             questionTypes,
+            sourceDocumentName,
           }),
         });
 

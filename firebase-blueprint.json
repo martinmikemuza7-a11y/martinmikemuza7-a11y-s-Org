@@ -141,6 +141,23 @@
         "createdAt": { "type": "number" }
       },
       "required": ["id", "userId", "courseId", "title", "score", "createdAt"]
+    },
+    "attempt": {
+      "title": "Attempt",
+      "description": "User practice answer attempt and score evaluation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "questionId": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "answer": { "type": "string", "maxLength": 5000 },
+        "evaluation": { "type": "string", "maxLength": 32 },
+        "score": { "type": "number" },
+        "feedback": { "type": "string", "maxLength": 5000 },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "userId", "questionId", "courseId", "score", "createdAt"]
     }
   },
   "firestore": {
@@ -175,6 +192,10 @@
     "/users/{userId}/sessions/{sessionId}": {
       "schema": "studySession",
       "description": "Completed study session summaries and history"
+    },
+    "/users/{userId}/attempts/{attemptId}": {
+      "schema": "attempt",
+      "description": "Completed quiz question response attempts"
     }
   }
 }

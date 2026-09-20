@@ -11,10 +11,11 @@ import {
   AppSettings,
   SyncQueueItem,
   TutorMessage,
+  OriginalStoredFile,
 } from '../types';
 
 const DB_NAME = 'StudyBuddyAI_DB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbInstance: IDBDatabase | null = null;
 
@@ -75,6 +76,12 @@ export function openDB(): Promise<IDBDatabase> {
         const store = db.createObjectStore('tutorMessages', { keyPath: 'id' });
         store.createIndex('courseId', 'courseId', { unique: false });
       }
+      // Isolated storage store for untouched authentic original files (PDF/PPTX/Images/Docx)
+      if (!db.objectStoreNames.contains('originalFiles')) {
+        const store = db.createObjectStore('originalFiles', { keyPath: 'documentId' });
+        store.createIndex('courseId', 'courseId', { unique: false });
+        store.createIndex('userId', 'userId', { unique: false });
+      }
     };
 
     request.onsuccess = async () => {
@@ -124,13 +131,37 @@ export async function getById<T>(storeName: string, id: string): Promise<T | nul
   });
 }
 
+export type DBChangeCallback = (storeName: string, op: 'put' | 'delete', data: any) => void;
+const dbChangeListeners: DBChangeCallback[] = [];
+
+export function subscribeToDBChanges(callback: DBChangeCallback): () => void {
+  dbChangeListeners.push(callback);
+  return () => {
+    const idx = dbChangeListeners.indexOf(callback);
+    if (idx !== -1) dbChangeListeners.splice(idx, 1);
+  };
+}
+
+export function notifyDBChange(storeName: string, op: 'put' | 'delete', data: any) {
+  for (const listener of dbChangeListeners) {
+    try {
+      listener(storeName, op, data);
+    } catch (e) {
+      console.error('Error in DB change listener:', e);
+    }
+  }
+}
+
 export async function putItem<T>(storeName: string, item: T): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, 'readwrite');
     const store = tx.objectStore(storeName);
     const req = store.put(item);
-    req.onsuccess = () => resolve();
+    req.onsuccess = () => {
+      notifyDBChange(storeName, 'put', item);
+      resolve();
+    };
     req.onerror = () => reject(req.error);
   });
 }
@@ -141,8 +172,76 @@ export async function deleteItem(storeName: string, id: string): Promise<void> {
     const tx = db.transaction(storeName, 'readwrite');
     const store = tx.objectStore(storeName);
     const req = store.delete(id);
+    req.onsuccess = async () => {
+      notifyDBChange(storeName, 'delete', id);
+      // If a document is deleted, also automatically purge its raw original file binary
+      if (storeName === 'documents') {
+        try {
+          await deleteOriginalFile(id);
+        } catch (e) {
+          console.warn('Failed to delete associated original file:', e);
+        }
+      }
+      resolve();
+    };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+/**
+ * Store the untouched, authentic original file (PDF/PPTX/Image/Docx)
+ * in an isolated IndexedDB store, physically separate from processed AI text chunks.
+ */
+export async function saveOriginalFile(item: OriginalStoredFile): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('originalFiles', 'readwrite');
+    const store = tx.objectStore('originalFiles');
+    const req = store.put(item);
     req.onsuccess = () => resolve();
     req.onerror = () => reject(req.error);
+  });
+}
+
+/**
+ * Retrieve the authentic original file by documentId.
+ */
+export async function getOriginalFile(documentId: string): Promise<OriginalStoredFile | null> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('originalFiles', 'readonly');
+    const store = tx.objectStore('originalFiles');
+    const req = store.get(documentId);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+/**
+ * Delete the authentic original file by documentId.
+ */
+export async function deleteOriginalFile(documentId: string): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('originalFiles', 'readwrite');
+    const store = tx.objectStore('originalFiles');
+    const req = store.delete(documentId);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+/**
+ * Fast check if original file exists in storage.
+ */
+export async function hasOriginalFile(documentId: string): Promise<boolean> {
+  const db = await openDB();
+  return new Promise((resolve) => {
+    const tx = db.transaction('originalFiles', 'readonly');
+    const store = tx.objectStore('originalFiles');
+    const req = store.count(documentId);
+    req.onsuccess = () => resolve(req.result > 0);
+    req.onerror = () => resolve(false);
   });
 }
 

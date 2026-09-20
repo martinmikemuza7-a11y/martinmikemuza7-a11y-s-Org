@@ -191,7 +191,7 @@ Respond with a JSON object in this exact schema:
   // Server-side AI endpoint: Question Generation Pipeline
   app.post("/api/ai/generate-questions", async (req, res) => {
     try {
-      const { courseName, materialChunks, count = 5, difficulty = "Mixed", questionTypes } = req.body;
+      const { courseName, materialChunks, count = 5, difficulty = "Mixed", questionTypes, sourceDocumentName } = req.body;
       const ai = getAI();
 
       if (!ai) {
@@ -207,11 +207,15 @@ Respond with a JSON object in this exact schema:
 
       const formattedContext = materialChunks
         .map((c: { source: string; page?: string | number; text: string }, i: number) => 
-          `[Document Segment ${i + 1}: ${c.source}${c.page ? ` (Page ${c.page})` : ''}]\n${c.text}`
+          `[Document Segment ${i + 1}: ${c.source}${c.page ? ` (Page/Slide ${c.page})` : ''}]\n${c.text}`
         )
         .join("\n\n");
 
-      const prompt = `You are an expert exam author. Based STRICTLY on the following course study materials for "${courseName}", generate exactly ${count} high-quality study questions.
+      const sourceLockRule = sourceDocumentName
+        ? `\nSTRICT SOURCE DOCUMENT LOCK:\nYou MUST generate all ${count} questions and answers SOLELY and EXCLUSIVELY from the specific document: "${sourceDocumentName}". Every question, option, correct answer, and explanation must be directly grounded in the content of "${sourceDocumentName}". Do not test concepts outside this document. In 'sourceCitation', cite "${sourceDocumentName} — Page/Slide [X]".`
+        : '';
+
+      const prompt = `You are an expert exam author. Based STRICTLY on the following course study materials for "${courseName}", generate exactly ${count} high-quality study questions.${sourceLockRule}
 
 TARGET DIFFICULTY: ${difficulty}
 ALLOWED QUESTION TYPES: ${Array.isArray(questionTypes) && questionTypes.length > 0 ? questionTypes.join(", ") : "multiple_choice, true_false, short_answer"}
@@ -228,7 +232,7 @@ RULES:
 4. In 'true_false', provide options ["True", "False"].
 5. In 'short_answer', provide expected key concepts, acceptable variations, and standard correct answer.
 6. EVERY question MUST include an in-depth, clear 'explanation' grounded in the text.
-7. EVERY question MUST include the exact 'sourceCitation' (e.g. "Biology Notes.pdf — Page 4") matching the source provided.
+7. EVERY question MUST include the exact 'sourceCitation' (e.g. "${sourceDocumentName || 'Document Notes'} — Page/Slide 4") matching the source provided.
 8. Return ONLY valid JSON adhering to the specified schema.
 
 MATERIALS:
@@ -371,6 +375,88 @@ Respond ONLY with valid JSON in this schema:
     } catch (err: any) {
       console.error("Gemini OCR error:", err);
       res.status(500).json({ error: err.message || "Failed to perform OCR" });
+    }
+  });
+
+  // Server-side AI endpoint: Intelligent Document Processing with Gemini API
+  app.post("/api/ai/parse-document", async (req, res) => {
+    try {
+      const { text, filename, fileType } = req.body;
+      const ai = getAI();
+
+      if (!ai) {
+        return res.status(503).json({
+          error: "Cloud AI unavailable. Gemini API key is not configured.",
+          fallback: true,
+        });
+      }
+
+      if (!text || typeof text !== "string" || text.trim().length === 0) {
+        return res.status(400).json({ error: "No document text provided for processing." });
+      }
+
+      // Safe bounded sample to ensure fast, responsive processing
+      const sampleText = text.slice(0, 30000);
+
+      const prompt = `You are an expert academic document analyzer powered by Gemini AI.
+Analyze the following study material extracted from "${filename || 'Uploaded Document'}" (${fileType || 'academic material'}).
+
+Perform these tasks:
+1. Extract a clear, concise Executive Summary (2-4 sentences summarizing core subject matter and goals).
+2. Extract 5-10 Key Academic Concepts / Technical Terms taught in this document.
+3. Clean, structure, and format the text into clean readable Markdown with proper section headers and bullet points. Remove any raw binary artifacts, stray XML tags, or zip header glitches.
+4. Formulate 3 high-yield practice questions testing the core mechanisms or definitions.
+
+DOCUMENT TEXT:
+${sampleText}
+
+Respond ONLY with valid JSON matching this schema:
+{
+  "summary": "2-4 sentence executive summary...",
+  "keyConcepts": ["Concept 1", "Concept 2", "Concept 3"],
+  "cleanText": "Structured, clean academic markdown...",
+  "suggestedQuestions": [
+    {
+      "question": "Sample question text...",
+      "type": "multiple_choice",
+      "options": ["A", "B", "C", "D"],
+      "correctAnswer": "A",
+      "explanation": "Why this is correct..."
+    }
+  ]
+}`;
+
+      const response = await generateContentWithFallback(ai, {
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          temperature: 0.2,
+        },
+      });
+
+      const responseText = response.text?.trim() || "{}";
+      let parsedData: any = {};
+      try {
+        parsedData = JSON.parse(responseText);
+      } catch {
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          parsedData = JSON.parse(jsonMatch[0]);
+        }
+      }
+
+      res.json({
+        summary: parsedData.summary || "",
+        keyConcepts: parsedData.keyConcepts || [],
+        cleanText: parsedData.cleanText || text,
+        suggestedQuestions: parsedData.suggestedQuestions || [],
+      });
+    } catch (err: any) {
+      console.error("Gemini parse-document error:", err);
+      res.status(500).json({
+        error: err.message || "Failed to process document with Gemini AI",
+        fallback: true,
+      });
     }
   });
 

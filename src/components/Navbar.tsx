@@ -30,6 +30,8 @@ interface NavbarProps {
   onTriggerSync: () => Promise<void>;
   isSyncing: boolean;
   lastSyncedAt?: number;
+  isAutoSyncActive?: boolean;
+  lastSyncLabel?: string;
   settings: AppSettings | null;
   onOpenSettings: () => void;
   onUpdateTheme?: (theme: ThemeMode) => void;
@@ -46,6 +48,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onTriggerSync,
   isSyncing,
   lastSyncedAt,
+  isAutoSyncActive,
+  lastSyncLabel,
   settings,
   onOpenSettings,
   onUpdateTheme,
@@ -350,47 +354,67 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
-          {/* Cross-Device Sync (PC & Phone) Button */}
+          {/* Automatic Cross-Device Sync (PC ↔ Phone) Status Indicator */}
           {onOpenCloudSync && (
             <button
               onClick={onOpenCloudSync}
-              className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition cursor-pointer ${
+              className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold transition cursor-pointer shadow-2xs ${
                 user
-                  ? 'border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
-                  : 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
+                  ? 'border-emerald-300 bg-emerald-50/90 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200'
+                  : 'border-blue-300 bg-blue-50/90 text-blue-900 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-200'
               }`}
               title={
                 user
-                  ? `Connected: ${user.email} (PC ↔ Phone real-time sync active)`
-                  : 'Link your phone with PC to sync study materials'
+                  ? `Automatic Sync Active (${user.email}). All changes on PC and Phone synchronize automatically in real time.`
+                  : 'Turn on automatic real-time sync between PC and Phone'
               }
             >
               {user ? (
                 <>
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <ArrowRightLeft className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span className="hidden sm:inline font-semibold">PC ↔ Phone Synced</span>
-                  <span className="sm:hidden font-semibold">Synced</span>
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  <ArrowRightLeft className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <div className="flex flex-col text-left">
+                    <span className="hidden sm:inline leading-none font-bold">
+                      ⚡ Auto-Sync Active
+                    </span>
+                    <span className="sm:hidden leading-none font-bold">
+                      ⚡ Auto-Sync
+                    </span>
+                    <span className="hidden md:inline text-[9px] font-medium text-emerald-700 dark:text-emerald-300/80 leading-tight mt-0.5">
+                      {isSyncing ? 'Syncing...' : (lastSyncLabel || 'Real-time (PC ↔ Phone)')}
+                    </span>
+                  </div>
                 </>
               ) : (
                 <>
-                  <Cloud className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                  <span className="hidden sm:inline font-semibold">Sync PC & Phone</span>
-                  <span className="sm:hidden font-semibold">Sync</span>
+                  <Cloud className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                  <div className="flex flex-col text-left">
+                    <span className="hidden sm:inline leading-none font-bold">
+                      ⚡ Enable Auto-Sync
+                    </span>
+                    <span className="sm:hidden leading-none font-bold">
+                      Auto-Sync
+                    </span>
+                    <span className="hidden md:inline text-[9px] font-medium text-blue-600 dark:text-blue-300/80 leading-tight mt-0.5">
+                      PC ↔ Phone Pairing
+                    </span>
+                  </div>
                 </>
               )}
             </button>
           )}
 
-          {/* Direct Force Sync Button */}
+          {/* Discreet Re-sync icon for testing */}
           <button
             onClick={onTriggerSync}
             disabled={isSyncing}
-            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-xs transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-            title={lastSyncedAt ? `Last synced: ${new Date(lastSyncedAt).toLocaleTimeString()}` : 'Force sync now'}
+            className="flex items-center justify-center h-8 w-8 rounded-xl border border-slate-200 bg-white text-slate-600 shadow-2xs transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+            title={lastSyncedAt ? `Auto-sync heartbeat active. Click to force instant reconcile.` : 'Reconcile now'}
           >
-            <RefreshCw className={`h-3.5 w-3.5 text-slate-500 ${isSyncing ? 'animate-spin text-blue-600' : ''}`} />
-            <span className="hidden lg:inline">{isSyncing ? 'Syncing...' : 'Sync Now'}</span>
+            <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin text-blue-600' : 'text-slate-500'}`} />
           </button>
 
           {/* Notifications Permission */}

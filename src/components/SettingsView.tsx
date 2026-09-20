@@ -858,6 +858,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   {isInstalled ? 'Running in Standalone Mode.' : 'Generate signed Play Store APK or Windows installer via PWABuilder.'}
                 </p>
               </div>
+
+              <div className="rounded-xl border border-amber-200/90 bg-gradient-to-r from-amber-50/70 via-orange-50/40 to-white p-4 dark:border-amber-900/50 dark:from-amber-950/30 dark:via-slate-900 dark:to-slate-900 sm:col-span-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Cloud className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <span className="font-semibold text-xs text-slate-900 dark:text-white">
+                      Cloudflare Pages & Edge Functions
+                    </span>
+                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                      Edge-Ready
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <code className="text-[11px] bg-white dark:bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-mono">
+                      npm run deploy:cloudflare
+                    </code>
+                  </div>
+                </div>
+                <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Configured with <span className="font-mono text-slate-800 dark:text-slate-200 font-semibold">wrangler.toml</span>, <span className="font-mono text-slate-800 dark:text-slate-200 font-semibold">_routes.json</span>, <span className="font-mono text-slate-800 dark:text-slate-200 font-semibold">_headers</span>, and serverless Edge Functions in <span className="font-mono text-slate-800 dark:text-slate-200 font-semibold">functions/api/[[path]].ts</span> for zero-latency worldwide AI Tutor, quiz generation, semantic grading, and cross-device sync.
+                </p>
+              </div>
             </div>
           </div>
 

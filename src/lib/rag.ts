@@ -124,7 +124,9 @@ export function chunkDocumentText(
     });
   }
 
-  return chunks;
+  // Cap maximum chunks to protect heap memory during indexing
+  const MAX_CHUNKS_PER_DOC = 150;
+  return chunks.slice(0, MAX_CHUNKS_PER_DOC);
 }
 
 function chunkSlice(text: string, chunkSize: number, overlap: number): string[] {
@@ -163,19 +165,23 @@ function chunkSlice(text: string, chunkSize: number, overlap: number): string[] 
   return result;
 }
 
-// Scoped RAG Search with strict Course Isolation
+// Scoped RAG Search with strict Course & Document Isolation
 export async function searchCourseKnowledgeBase(
   courseId: string,
   query: string,
   topK = 5,
-  folderId?: string
+  folderId?: string,
+  documentId?: string
 ): Promise<DocumentChunk[]> {
   const allCourseChunks = await getByIndex<DocumentChunk>('chunks', 'courseId', courseId);
   if (!allCourseChunks || allCourseChunks.length === 0) return [];
 
-  const candidateChunks = folderId
-    ? allCourseChunks.filter((c) => c.folderId === folderId)
-    : allCourseChunks;
+  let candidateChunks = allCourseChunks;
+  if (documentId) {
+    candidateChunks = candidateChunks.filter((c) => c.documentId === documentId);
+  } else if (folderId) {
+    candidateChunks = candidateChunks.filter((c) => c.folderId === folderId);
+  }
 
   const queryTokens = tokenize(query);
   if (queryTokens.length === 0) {

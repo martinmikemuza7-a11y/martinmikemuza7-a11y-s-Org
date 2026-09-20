@@ -57,6 +57,7 @@ export default function App() {
 
   // Modal & context states
   const [questionGenCourseId, setQuestionGenCourseId] = useState<string | null>(null);
+  const [questionGenDocId, setQuestionGenDocId] = useState<string | null>(null);
   const [studyContext, setStudyContext] = useState<{ courseId?: string; duration?: number } | null>(null);
   const [selectedCourseForView, setSelectedCourseForView] = useState<string | undefined>(undefined);
   const [showCloudSyncModal, setShowCloudSyncModal] = useState(false);
@@ -258,8 +259,10 @@ export default function App() {
           aiStatus={aiStatus}
           onRefreshStatus={checkStatus}
           onTriggerSync={handleTriggerSync}
-          isSyncing={isSyncing}
-          lastSyncedAt={lastSyncedAt}
+          isSyncing={isSyncing || syncStatus.state === 'syncing'}
+          lastSyncedAt={syncStatus.lastSyncedAt || lastSyncedAt}
+          isAutoSyncActive={syncStatus.isAutoSyncActive}
+          lastSyncLabel={syncStatus.lastSyncLabel}
           settings={settings}
           onOpenSettings={() => setActiveTab('settings')}
           onUpdateTheme={handleUpdateTheme}
@@ -304,7 +307,10 @@ export default function App() {
                 selectedCourseId={selectedCourseForView}
                 onRefreshData={refreshAllData}
                 onStartStudy={handleStartStudy}
-                onOpenQuestionGen={(courseId) => setQuestionGenCourseId(courseId)}
+                onOpenQuestionGen={(courseId, documentId) => {
+                  setQuestionGenCourseId(courseId);
+                  setQuestionGenDocId(documentId || null);
+                }}
                 onOpenTutor={(courseId) => {
                   setSelectedCourseForView(courseId);
                   setActiveTab('tutor');
@@ -385,8 +391,12 @@ export default function App() {
           course={currentGenCourse}
           documents={documents}
           chunks={chunks}
+          initialDocumentId={questionGenDocId || undefined}
           isOpen={true}
-          onClose={() => setQuestionGenCourseId(null)}
+          onClose={() => {
+            setQuestionGenCourseId(null);
+            setQuestionGenDocId(null);
+          }}
           onQuestionsSaved={refreshAllData}
         />
       )}

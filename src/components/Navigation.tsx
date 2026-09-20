@@ -390,7 +390,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                 ) : (
                   <Cloud className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                 )}
-                <span className="truncate">{user ? 'PC ↔ Phone Synced' : 'Sync PC & Phone'}</span>
+                <span className="truncate">{user ? '⚡ Auto-Sync Active' : '⚡ Enable Auto-Sync'}</span>
               </div>
               <ArrowRightLeft className="h-3 w-3 opacity-60" />
             </button>

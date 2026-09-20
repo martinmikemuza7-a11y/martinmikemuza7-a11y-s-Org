@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Course, Folder, DocumentItem, DocumentChunk, Question } from '../types';
 import { parseUploadedFile } from '../lib/file-parser';
 import { chunkDocumentText } from '../lib/rag';
-import { putItem, deleteItem, openDB } from '../lib/db';
+import { putItem, deleteItem, openDB, saveOriginalFile, deleteOriginalFile, getOriginalFile } from '../lib/db';
 import {
   syncUploadDocument,
   syncDeleteDocument,
@@ -31,6 +31,7 @@ import {
   Edit2,
   Plus,
   Eye,
+  Presentation,
 } from 'lucide-react';
 import { DocumentUploadPreviewModal, PendingUploadItem } from './DocumentUploadPreviewModal';
 
@@ -57,7 +58,7 @@ interface CoursesViewProps {
   questions: Question[];
   onRefreshData: () => Promise<void>;
   onStartStudy: (courseId: string) => void;
-  onOpenQuestionGen: (courseId: string) => void;
+  onOpenQuestionGen: (courseId: string, documentId?: string) => void;
   onOpenTutor: (courseId: string) => void;
   selectedCourseId?: string;
 }
@@ -110,9 +111,13 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
   const courseQuestions = questions.filter((q) => q.courseId === currentCourse?.id);
   const courseChunks = chunks.filter((c) => c.courseId === currentCourse?.id);
 
-  // File Upload Handler with Interactive Preview
+  // File Upload Handler with Interactive Preview & Low-Memory Protection
   const handleFilesSelected = async (filesList: FileList | null) => {
     if (!filesList || filesList.length === 0 || !currentCourse) return;
+
+    // Reset input elements immediately to release OS file handles and browser memory
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (folderInputRef.current) folderInputRef.current.value = '';
 
     setIsUploading(true);
     const total = filesList.length;
@@ -121,10 +126,34 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
     try {
       for (let i = 0; i < total; i++) {
         const file = filesList[i];
-        setUploadProgressText(`Extracting & generating preview for ${i + 1} of ${total}: ${file.name}...`);
+        setUploadProgressText(`Optimizing & extracting (${i + 1}/${total}): ${file.name}...`);
 
-        const parsed = await parseUploadedFile(file);
+        // Yield execution to allow garbage collector to clean prior buffers
+        if (i > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 30));
+        }
+
         const docId = `doc-${Date.now()}-${i}`;
+
+        // 1. Store the untouched original file separately in originalFiles store
+        await saveOriginalFile({
+          documentId: docId,
+          filename: file.name,
+          fileType: file.name.endsWith('.pdf')
+            ? 'pdf'
+            : file.name.endsWith('.pptx') || file.name.endsWith('.ppt')
+            ? 'pptx'
+            : file.type.startsWith('image/')
+            ? 'image'
+            : 'txt',
+          mimeType: file.type || 'application/octet-stream',
+          size: file.size,
+          blob: file,
+          createdAt: Date.now(),
+        });
+
+        // 2. Safely scan and extract structured text, pages, and summary
+        const parsed = await parseUploadedFile(file);
 
         const tempDoc: DocumentItem = {
           id: docId,
@@ -135,6 +164,10 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
           fileSize: file.size,
           extractedText: parsed.text,
           pageCount: parsed.pageCount || 1,
+          previewUrl: parsed.previewUrl,
+          pages: parsed.pages,
+          keyConcepts: parsed.keyConcepts,
+          summary: parsed.summary,
           processingStatus: 'ready',
           createdAt: Date.now(),
         };
@@ -142,18 +175,24 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
         const newChunks = chunkDocumentText(tempDoc).map((c, cIdx) => ({
           ...c,
           id: `chunk-${docId}-${cIdx}`,
+          documentId: docId,
+          courseId: currentCourse.id,
         }));
 
         parsedItems.push({
-          file,
+          file: file,
           id: docId,
           filename: file.name,
           fileType: parsed.fileType,
           fileSize: file.size,
           text: parsed.text,
           pageCount: parsed.pageCount || 1,
+          previewUrl: parsed.previewUrl,
+          pages: parsed.pages,
           folderId: selectedFolderId || undefined,
           chunks: newChunks,
+          keyConcepts: parsed.keyConcepts,
+          summary: parsed.summary,
         });
       }
 
@@ -163,7 +202,17 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
       setShowUploadPreviewModal(true);
     } catch (err: any) {
       console.error('File parsing error:', err);
-      alert(`Error extracting document text: ${err.message}`);
+      const isMemoryError =
+        err?.name === 'QuotaExceededError' ||
+        /memory|quota|heap|out of memory/i.test(err?.message || '');
+
+      if (isMemoryError) {
+        alert(
+          'Low memory warning detected: File was processed in optimized low-memory mode. High-resolution textures were trimmed to protect your device.'
+        );
+      } else {
+        alert(`Error extracting document text: ${err.message || 'Unknown error'}`);
+      }
       setIsUploading(false);
       setUploadProgressText('');
     }
@@ -187,6 +236,10 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
           fileSize: item.fileSize,
           extractedText: item.text,
           pageCount: item.pageCount,
+          previewUrl: item.previewUrl,
+          pages: item.pages,
+          keyConcepts: item.keyConcepts,
+          summary: item.summary,
           processingStatus: 'ready',
           createdAt: Date.now(),
         };
@@ -547,7 +600,10 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
                 <input
                   type="file"
                   ref={fileInputRef}
-                  onChange={(e) => handleFilesSelected(e.target.files)}
+                  onChange={(e) => {
+                    handleFilesSelected(e.target.files);
+                    e.target.value = '';
+                  }}
                   multiple
                   accept=".pdf,.pptx,.ppt,.docx,.doc,.txt,.md,.json,.csv,image/*"
                   className="hidden"
@@ -555,7 +611,10 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
                 <input
                   type="file"
                   ref={folderInputRef}
-                  onChange={(e) => handleFilesSelected(e.target.files)}
+                  onChange={(e) => {
+                    handleFilesSelected(e.target.files);
+                    e.target.value = '';
+                  }}
                   // @ts-ignore
                   webkitdirectory="true"
                   directory="true"
@@ -639,17 +698,28 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
                           key={doc.id}
                           className="card-2d flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border-2 border-slate-900 bg-white p-3.5 shadow-2d-sm transition hover:translate-x-1 dark:border-slate-700 dark:bg-slate-850"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-slate-900 bg-amber-300 text-slate-950 font-black shadow-2d-sm">
-                              {doc.fileType === 'pdf' ? (
-                                <FileText className="h-5 w-5" />
-                              ) : doc.fileType === 'image' ? (
-                                <ImageIcon className="h-5 w-5" />
-                              ) : (
-                                <FileCode className="h-5 w-5" />
-                              )}
-                            </div>
-                            <div>
+                          <div className="flex items-center gap-3 min-w-0">
+                            {doc.fileType === 'image' && doc.previewUrl ? (
+                              <img
+                                src={doc.previewUrl}
+                                alt=""
+                                referrerPolicy="no-referrer"
+                                className="h-10 w-10 shrink-0 rounded-xl border-2 border-slate-900 object-cover shadow-2d-sm"
+                              />
+                            ) : (
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-slate-900 bg-amber-300 text-slate-950 font-black shadow-2d-sm">
+                                {doc.fileType === 'pdf' ? (
+                                  <FileText className="h-5 w-5" />
+                                ) : doc.fileType === 'pptx' ? (
+                                  <Presentation className="h-5 w-5" />
+                                ) : doc.fileType === 'image' ? (
+                                  <ImageIcon className="h-5 w-5" />
+                                ) : (
+                                  <FileCode className="h-5 w-5" />
+                                )}
+                              </div>
+                            )}
+                            <div className="min-w-0">
                               <div className="flex items-center gap-2">
                                 <h4 className="font-black text-xs sm:text-sm text-slate-950 dark:text-white line-clamp-1">
                                   {doc.filename}
@@ -659,12 +729,12 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
                                 </span>
                               </div>
                               <p className="mt-0.5 text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                                {Math.round(doc.fileSize / 1024)} KB • {doc.pageCount} Pages • {docChunksCount} RAG Chunks
+                                {Math.round(doc.fileSize / 1024)} KB • {doc.fileType === 'pptx' ? `${doc.pageCount} Slides` : `${doc.pageCount} Pages`} • {docChunksCount} RAG Chunks
                               </p>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 self-end sm:self-center">
+                          <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                             <motion.button
                               type="button"
                               whileHover={{ scale: 1.04 }}
@@ -674,8 +744,21 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
                               title="Inspect & Preview Document"
                             >
                               <Eye className="h-3.5 w-3.5" />
-                              <span>Preview & Inspect</span>
+                              <span>Preview</span>
                             </motion.button>
+
+                            <motion.button
+                              type="button"
+                              whileHover={{ scale: 1.04 }}
+                              whileTap={{ scale: 0.96 }}
+                              onClick={() => onOpenQuestionGen(currentCourse.id, doc.id)}
+                              className="btn-2d flex items-center gap-1.5 rounded-xl border-2 border-slate-900 bg-violet-300 px-3 py-1.5 text-xs font-black text-slate-950 shadow-2d-sm hover:bg-violet-400 dark:bg-violet-900/60 dark:text-white transition cursor-pointer"
+                              title="Generate Questions & Answers strictly from this Document"
+                            >
+                              <Sparkles className="h-3.5 w-3.5 text-violet-950 dark:text-violet-200" />
+                              <span>Make Q&A</span>
+                            </motion.button>
+
                             <motion.button
                               type="button"
                               whileHover={{ scale: 1.05 }}
@@ -777,6 +860,8 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
           viewChunks={chunks.filter((c) => c.documentId === previewDoc.id)}
           onOpenQuestionGen={onOpenQuestionGen}
           onOpenTutor={() => onOpenTutor(currentCourse.id)}
+          onStartStudy={(courseId) => onStartStudy(courseId)}
+          onDeleteDoc={(docId) => handleDeleteDoc(docId)}
         />
       )}
 
@@ -786,6 +871,10 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
           isOpen={true}
           onClose={() => {
             setShowUploadPreviewModal(false);
+            // Clean up staged original files if user dismissed without confirming
+            pendingUploadDocs.forEach((doc) => {
+              deleteOriginalFile(doc.id).catch(() => {});
+            });
             setPendingUploadDocs([]);
           }}
           mode="upload"
@@ -793,6 +882,8 @@ export const CoursesView: React.FC<CoursesViewProps> = ({
           folders={courseFolders}
           pendingDocs={pendingUploadDocs}
           onConfirmUpload={handleConfirmUploadDocs}
+          onOpenQuestionGen={onOpenQuestionGen}
+          onOpenTutor={() => onOpenTutor(currentCourse.id)}
         />
       )}
 

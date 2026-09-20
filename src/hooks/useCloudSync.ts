@@ -75,6 +75,8 @@ export function useCloudSync(onDataChanged?: () => void) {
     isAuthenticated: !!user,
     deviceType,
     syncStatus,
+    isAutoSyncActive: syncStatus.isAutoSyncActive,
+    lastSyncLabel: syncStatus.lastSyncLabel,
     isAuthenticating,
     authError,
     signIn,

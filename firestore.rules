@@ -82,6 +82,14 @@ service cloud.firestore {
         allow update: if isOwner(userId) && isValidId(sessionId) && request.resource.data.userId == userId;
         allow delete: if isOwner(userId) && isValidId(sessionId);
       }
+
+      // Quiz and Question Attempts Subcollection
+      match /attempts/{attemptId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(attemptId) && request.resource.data.userId == userId;
+        allow update: if isOwner(userId) && isValidId(attemptId) && request.resource.data.userId == userId;
+        allow delete: if isOwner(userId) && isValidId(attemptId);
+      }
     }
   }
 }
